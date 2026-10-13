@@ -16,7 +16,7 @@
     <!-- Google Font Inter -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     />
 
     <script>
@@ -40,9 +40,6 @@
             fontFamily: {
               sans: ["Inter", "sans-serif"],
             },
-            aspectRatio: {
-              "16/9": "16 / 9",
-            },
           },
         },
       };
@@ -50,52 +47,45 @@
     <style>
       body {
         font-family: "Inter", sans-serif;
-        background-color: #f1f5f9;
+        background-color: #f8fafc;
       }
       .custom-scrollbar::-webkit-scrollbar {
-        width: 5px;
+        width: 6px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(0, 0, 0, 0.02);
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
         background: rgba(0, 0, 0, 0.15);
         border-radius: 10px;
       }
       .card-shadow {
-        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
       }
     </style>
   </head>
-  <body
-    class="text-slate-800 flex items-center justify-center min-h-screen p-2 sm:p-4 lg:p-6 bg-slate-200"
-  >
-    <!-- Dashboard Main Frame (Maintained near 16:9 widescreen ratio context) -->
+  <body class="text-slate-800 bg-slate-100 h-screen w-screen overflow-hidden">
+    <!-- Dashboard App Main Container (100% Widescreen Viewport) -->
     <div
-      class="w-full max-w-[1440px] bg-slate-50 rounded-2xl shadow-2xl overflow-hidden border border-slate-200/80 flex flex-col md:flex-row min-h-[780px]"
+      class="w-full h-full bg-slate-50 flex flex-col md:flex-row overflow-hidden"
     >
-      <!-- Sidebar Navigation -->
+      <!-- Fixed Sidebar Navigation -->
       <aside
-        class="w-full md:w-64 bg-navy-900 text-slate-300 flex flex-col flex-shrink-0 justify-between p-5 border-r border-navy-800"
+        class="w-full md:w-64 bg-navy-900 text-slate-300 flex flex-col flex-shrink-0 justify-between p-5 border-r border-navy-800 h-auto md:h-full z-20"
       >
         <div>
           <!-- Brand Header -->
-          <div class="flex items-center gap-3 px-3 py-2 mb-8">
+          <div class="flex items-center gap-3 px-3 py-2 mb-6">
             <div
               class="w-10 h-10 rounded-xl bg-electric-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-electric-600/30"
             >
               <i class="fa-solid font-black text-lg">TH</i>
             </div>
-            <div>
-              <h1
-                class="text-white font-bold text-lg leading-tight tracking-wide"
-              >
-                Toy Haven
-              </h1>
-              <p class="text-[11px] text-slate-400 font-medium">
-                Store Management
-              </p>
-            </div>
+            <h1
+              class="text-white font-bold text-xl leading-tight tracking-wide"
+            >
+              Toy Haven
+            </h1>
           </div>
 
           <!-- Navigation Links -->
@@ -156,7 +146,9 @@
         </div>
 
         <!-- Sidebar Footer Info -->
-        <div class="px-3 py-3 border-t border-navy-800/60 mt-auto">
+        <div
+          class="px-3 py-3 border-t border-navy-800/60 mt-auto hidden md:block"
+        >
           <div class="flex items-center justify-between text-xs text-slate-400">
             <span class="flex items-center gap-2">
               <span
@@ -169,32 +161,29 @@
         </div>
       </aside>
 
-      <!-- Main Content Area -->
+      <!-- Main Content Area (Independently Scrollable) -->
       <main
-        class="flex-1 flex flex-col bg-slate-50 min-w-0 overflow-y-auto custom-scrollbar p-6 sm:p-8"
+        class="flex-1 flex flex-col bg-slate-50 min-w-0 h-full overflow-y-auto custom-scrollbar p-6 lg:p-8"
       >
-        <!-- Header Bar -->
-        <header
-          class="flex items-center justify-between pb-6 mb-6 border-b border-slate-200/80"
-        >
+        <!-- Header Bar (Removed bottom border line) -->
+        <header class="flex items-center justify-between pb-3 mb-5">
           <div>
             <h2
               class="text-2xl sm:text-3xl font-bold text-navy-900 tracking-tight"
             >
-              Welcome back, Awais 👋
+              Welcome back, Admin 👋
             </h2>
-            <p class="text-slate-500 text-sm mt-0.5 font-medium">
+            <p class="text-slate-500 text-xs sm:text-sm mt-0.5 font-medium">
               Here's what's happening with your store.
             </p>
           </div>
 
-          <!-- Right Side Profile Header (Search and Notification Bell removed as per prompt) -->
           <div class="flex items-center gap-3">
             <div class="relative cursor-pointer group">
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"
-                alt="Awais Profile"
-                class="w-11 h-11 rounded-full object-cover ring-2 ring-electric-500/30 group-hover:ring-electric-500 transition-all shadow-sm"
+                alt="Admin Profile"
+                class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover ring-2 ring-electric-500/30 group-hover:ring-electric-500 transition-all shadow-sm"
               />
               <div
                 class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white"
@@ -205,13 +194,13 @@
 
         <!-- Key Metric Cards Grid -->
         <section
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6"
         >
           <!-- Metric 1: Total Sales -->
           <div
             class="bg-white p-5 rounded-2xl border border-slate-200/70 card-shadow hover:border-slate-300 transition-all"
           >
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-2">
               <span
                 class="text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >Total Sales (Delivered)</span
@@ -233,7 +222,7 @@
           <div
             class="bg-white p-5 rounded-2xl border border-slate-200/70 card-shadow hover:border-slate-300 transition-all"
           >
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-2">
               <span
                 class="text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >Total Orders</span
@@ -255,7 +244,7 @@
           <div
             class="bg-white p-5 rounded-2xl border border-slate-200/70 card-shadow hover:border-slate-300 transition-all"
           >
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-2">
               <span
                 class="text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >Total Users</span
@@ -277,7 +266,7 @@
           <div
             class="bg-white p-5 rounded-2xl border border-slate-200/70 card-shadow hover:border-slate-300 transition-all"
           >
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-2">
               <span
                 class="text-xs font-semibold uppercase tracking-wider text-slate-500"
                 >Total Products</span
@@ -297,18 +286,20 @@
         </section>
 
         <!-- Main Content Analytics Grid -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-          <!-- Left 2 Columns: Sales Line Chart Card -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <!-- Left 2 Columns: Sales Line Chart Card (Graph point interaction removed) -->
           <div
             class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/70 card-shadow flex flex-col justify-between"
           >
             <div
-              class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4"
             >
               <div>
-                <h3 class="text-lg font-bold text-navy-900">Sales Overview</h3>
-                <p class="text-xs text-slate-400 mt-0.5">
-                  Track revenue dynamics and order fulfillment over time
+                <h3 class="text-xl font-extrabold text-navy-900 tracking-tight">
+                  Sales Overview
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5 font-medium">
+                  Historical revenue performance over time
                 </p>
               </div>
 
@@ -319,14 +310,14 @@
                 >
                   <label
                     for="fromDate"
-                    class="text-[11px] font-semibold text-slate-400 uppercase"
+                    class="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
                     >From:</label
                   >
                   <input
                     type="date"
                     id="fromDate"
                     value="2026-05-01"
-                    class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                    class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
                   />
                 </div>
                 <div
@@ -334,77 +325,71 @@
                 >
                   <label
                     for="toDate"
-                    class="text-[11px] font-semibold text-slate-400 uppercase"
+                    class="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
                     >To:</label
                   >
                   <input
                     type="date"
                     id="toDate"
                     value="2026-05-30"
-                    class="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                    class="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
                   />
                 </div>
               </div>
             </div>
 
             <!-- Line Chart Canvas Container -->
-            <div class="relative flex-1 min-h-[260px] w-full">
+            <div class="relative flex-1 min-h-[300px] w-full pt-2">
               <canvas id="salesOverviewChart"></canvas>
             </div>
           </div>
 
-          <!-- Right 1 Column: Top Breakdowns Card (Filterable) -->
+          <!-- Right 1 Column: Top Breakdowns Card (Bigger, Compressed Font & No Footnote) -->
           <div
-            class="bg-white p-6 rounded-2xl border border-slate-200/70 card-shadow flex flex-col justify-between"
+            class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/70 card-shadow flex flex-col justify-between"
           >
             <div>
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-navy-900">Top Breakdowns</h3>
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xl font-extrabold text-navy-900 tracking-tight">
+                  Top Breakdowns
+                </h3>
                 <span
-                  class="text-xs font-medium text-electric-600 hover:text-electric-700 cursor-pointer"
-                  >View Details</span
+                  class="text-xs font-bold text-electric-600 hover:text-electric-700 cursor-pointer uppercase tracking-wider"
+                  >View All</span
                 >
               </div>
 
-              <!-- Breakdown Category Tabs -->
-              <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
+              <!-- Compressed Filter Tabs -->
+              <div
+                class="flex bg-slate-100 p-1 rounded-xl mb-3 border border-slate-200/60"
+              >
                 <button
                   onclick="switchBreakdown('product')"
                   id="tab-product"
-                  class="breakdown-tab flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-800 bg-white shadow-sm transition-all"
+                  class="breakdown-tab flex-1 py-1 text-xs font-extrabold rounded-lg text-slate-900 bg-white shadow-sm transition-all tracking-tight"
                 >
                   Product
                 </button>
                 <button
                   onclick="switchBreakdown('category')"
                   id="tab-category"
-                  class="breakdown-tab flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 transition-all"
+                  class="breakdown-tab flex-1 py-1 text-xs font-extrabold rounded-lg text-slate-500 hover:text-slate-900 transition-all tracking-tight"
                 >
                   Category
                 </button>
                 <button
                   onclick="switchBreakdown('user')"
                   id="tab-user"
-                  class="breakdown-tab flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-500 hover:text-slate-800 transition-all"
+                  class="breakdown-tab flex-1 py-1 text-xs font-extrabold rounded-lg text-slate-500 hover:text-slate-900 transition-all tracking-tight"
                 >
                   User
                 </button>
               </div>
 
-              <!-- Progress Bars List Container -->
-              <div id="breakdownContainer" class="space-y-4">
+              <!-- Progress Bars List Container (Bigger & Compressed Font List) -->
+              <div id="breakdownContainer" class="space-y-2.5">
                 <!-- Injected dynamically via JS -->
               </div>
-            </div>
-
-            <!-- Summary Footnote -->
-            <div
-              class="pt-4 mt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400"
-            >
-              <span>Top contributor share</span>
-              <span class="font-bold text-slate-700" id="breakdownTopShare"
-                >45.2%</span
-              >
             </div>
           </div>
         </section>
@@ -426,63 +411,70 @@
         data: [610000, 940000, 720000, 1220000, 1090000, 1650000, 1470000],
       };
 
-      // Data for Top Breakdowns in PHP
+      // Expanded 5-Item Data for Top Breakdowns
       const breakdownData = {
         product: [
           {
             name: "LEGO Starship Commander",
-            percent: 45.2,
-            amount: "₱1,125,000",
+            percent: 41.8,
+            amount: "₱1,040,000",
           },
-          { name: "RC Monster Truck Pro", percent: 28.7, amount: "₱714,000" },
+          { name: "RC Monster Truck Pro", percent: 26.5, amount: "₱660,000" },
           {
             name: "Barbie Dreamhouse Mansion",
-            percent: 17.4,
-            amount: "₱433,000",
+            percent: 16.1,
+            amount: "₱401,000",
           },
-          { name: "Wooden Railway Set", percent: 8.7, amount: "₱217,000" },
+          {
+            name: "Wooden Railway Deluxe Set",
+            percent: 9.3,
+            amount: "₱231,000",
+          },
+          {
+            name: "Hot Wheels Ultimate Track",
+            percent: 6.3,
+            amount: "₱157,000",
+          },
         ],
         category: [
-          {
-            name: "Building Sets & Blocks",
-            percent: 41.5,
-            amount: "₱1,033,000",
-          },
-          { name: "Remote Control Toys", percent: 31.2, amount: "₱776,000" },
-          { name: "Dolls & Playsets", percent: 18.1, amount: "₱450,000" },
-          { name: "Educational Toys", percent: 9.2, amount: "₱229,000" },
+          { name: "Building Sets & Blocks", percent: 38.5, amount: "₱958,000" },
+          { name: "Remote Control Toys", percent: 28.2, amount: "₱702,000" },
+          { name: "Dolls & Playsets", percent: 16.4, amount: "₱408,000" },
+          { name: "Educational Toys", percent: 10.1, amount: "₱251,000" },
+          { name: "Die-cast Vehicles", percent: 6.8, amount: "₱170,000" },
         ],
         user: [
-          {
-            name: "Sarah Jenkins (VIP Wholesale)",
-            percent: 38.0,
-            amount: "₱945,000",
-          },
+          { name: "Sarah Jenkins (VIP)", percent: 34.0, amount: "₱846,000" },
           {
             name: "Robert Vance (Collector)",
-            percent: 26.5,
-            amount: "₱659,000",
+            percent: 24.5,
+            amount: "₱610,000",
           },
-          { name: "Emily Chen (Retail)", percent: 21.0, amount: "₱522,000" },
+          { name: "Emily Chen (Retail)", percent: 19.2, amount: "₱478,000" },
           {
             name: "Michael Ross (Gift Buyer)",
-            percent: 14.5,
-            amount: "₱361,000",
+            percent: 13.1,
+            amount: "₱326,000",
+          },
+          {
+            name: "David Miller (Wholesale)",
+            percent: 9.2,
+            amount: "₱229,000",
           },
         ],
       };
 
       let salesChart;
 
-      // Initialize Chart.js
+      // Initialize Static Display Chart.js on Window Load
       window.onload = function () {
         const ctx = document
           .getElementById("salesOverviewChart")
           .getContext("2d");
 
-        // Create Electric Blue Gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, "rgba(59, 130, 246, 0.35)");
+        // Electric Blue Gradient Background
+        const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+        gradient.addColorStop(0, "rgba(59, 130, 246, 0.30)");
         gradient.addColorStop(1, "rgba(59, 130, 246, 0.0)");
 
         salesChart = new Chart(ctx, {
@@ -497,18 +489,22 @@
                 borderWidth: 3,
                 backgroundColor: gradient,
                 fill: true,
-                tension: 0.4,
+                tension: 0.38,
                 pointBackgroundColor: "#2563EB",
                 pointBorderColor: "#FFFFFF",
                 pointBorderWidth: 2,
                 pointRadius: 5,
                 pointHoverRadius: 7,
+                pointHoverBackgroundColor: "#1D4ED8",
+                pointHoverBorderColor: "#FFFFFF",
+                pointHoverBorderWidth: 2,
               },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            events: ["mousemove", "mouseout", "touchstart", "touchmove"], // Disables point click events
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -520,7 +516,7 @@
                 displayColors: false,
                 callbacks: {
                   label: function (context) {
-                    return "₱" + context.parsed.y.toLocaleString();
+                    return "Revenue: ₱" + context.parsed.y.toLocaleString();
                   },
                 },
               },
@@ -529,14 +525,14 @@
               x: {
                 grid: { display: false },
                 ticks: {
-                  font: { family: "Inter", size: 11 },
+                  font: { family: "Inter", size: 11, weight: "600" },
                   color: "#64748B",
                 },
               },
               y: {
                 grid: { color: "#F1F5F9" },
                 ticks: {
-                  font: { family: "Inter", size: 11 },
+                  font: { family: "Inter", size: 11, weight: "600" },
                   color: "#64748B",
                   callback: function (value) {
                     return (
@@ -552,35 +548,34 @@
           },
         });
 
-        // Initial render of breakdown tab
+        // Initial render of breakdown with updated prominent styling
         switchBreakdown("product");
       };
 
-      // Switch Active Breakdown (Product, Category, User)
+      // Switch Breakdown Tab with compressed, enlarged typography
       function switchBreakdown(type) {
-        // Update Active Buttons
         document.querySelectorAll(".breakdown-tab").forEach((btn) => {
-          btn.classList.remove("bg-white", "text-slate-800", "shadow-sm");
+          btn.classList.remove("bg-white", "text-slate-900", "shadow-sm");
           btn.classList.add("text-slate-500");
         });
         const activeBtn = document.getElementById(`tab-${type}`);
-        activeBtn.classList.add("bg-white", "text-slate-800", "shadow-sm");
+        activeBtn.classList.add("bg-white", "text-slate-900", "shadow-sm");
         activeBtn.classList.remove("text-slate-500");
 
-        // Render Items
+        // Render 5 Items with enlarged compressed fonts
         const items = breakdownData[type];
         const container = document.getElementById("breakdownContainer");
         container.innerHTML = "";
 
         items.forEach((item) => {
           const element = document.createElement("div");
-          element.className = "space-y-1.5";
+          element.className = "py-1 space-y-1";
           element.innerHTML = `
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="font-semibold text-slate-700 truncate max-w-[180px]">${item.name}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-slate-400">${item.amount}</span>
-                            <span class="font-bold text-navy-900 w-10 text-right">${item.percent}%</span>
+                    <div class="flex justify-between items-baseline text-sm leading-tight">
+                        <span class="font-extrabold text-slate-900 tracking-tight truncate max-w-[160px]" title="${item.name}">${item.name}</span>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-slate-500 font-bold text-xs font-mono">${item.amount}</span>
+                            <span class="font-black text-navy-900 text-sm tracking-tight w-11 text-right">${item.percent}%</span>
                         </div>
                     </div>
                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -589,13 +584,9 @@
                 `;
           container.appendChild(element);
         });
-
-        // Update footer total share text
-        document.getElementById("breakdownTopShare").innerText =
-          items[0].percent + "%";
       }
 
-      // Active Nav Item Highlight Handler
+      // Active Navigation Highlight
       function setActiveNav(element) {
         document.querySelectorAll(".nav-item").forEach((item) => {
           item.classList.remove(
