@@ -3,6 +3,34 @@ const User = require("../models/user");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
+
+initializeApp({
+  credential: cert(require("../config/serviceAccountKey.json")),
+});
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const decoded = await getAuth().verifyIdToken(req.body.idToken);
+    let user = await User.findOne({ email: decoded.email });
+    if (!user) {
+      user = await User.create({
+        name: decoded.name || decoded.email.split("@")[0],
+        email: decoded.email,
+        password: crypto.randomBytes(16).toString("hex"),
+        isVerified: true,
+        profilePhoto: { url: decoded.picture },
+      });
+    }
+    if (user.isDeleted || !user.isActive)
+      return res.status(403).json({ message: "Account unavailable" });
+    sendToken(user, 200, res);
+  } catch (err) {
+    res.status(401).json({ message: "Google login failed" });
+  }
+};
+
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -93,4 +121,26 @@ exports.logout = (req, res) => {
 
 exports.getProfile = (req, res) => {
   res.status(200).json({ success: true, user: req.user });
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const User = require("../models/user");
+    const { uploadImage, destroyImage } = require("../utils/cloudinary");
+    const user = await User.findById(req.user._id);
+    const { name, email, password, photo } = req.body;
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) user.password = password;
+    if (photo) {
+      if (user.profilePhoto?.public_id)
+        await destroyImage(user.profilePhoto.public_id);
+      user.profilePhoto = await uploadImage(photo, "toyhaven/avatars");
+    }
+    await user.save();
+    user.password = undefined;
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
 };
