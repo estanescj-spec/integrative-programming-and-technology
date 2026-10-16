@@ -34,6 +34,7 @@ router.put(
   "/admin/product/:id",
   isAuthenticatedUser,
   authorizeRoles("admin"),
+  productRules,
   updateProduct,
 );
 router.delete(

@@ -16,18 +16,7 @@ const productSchema = new mongoose.Schema(
       maxLength: 100,
     },
     description: { type: String, required: [true, "Enter description"] },
-    category: {
-      type: String,
-      required: [true, "Select category"],
-      enum: [
-        "Lego Sets",
-        "RC Cars",
-        "Hot Wheels",
-        "Nerf Blasters",
-        "Puzzles",
-        "Plush Toys",
-      ],
-    },
+    category: { type: String, required: [true, "Select category"], trim: true },
     photos: [{ public_id: String, url: String }],
     variants: {
       type: [variantSchema],

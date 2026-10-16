@@ -24,15 +24,6 @@ exports.registerRules = [
 exports.productRules = [
   body("name").trim().notEmpty().withMessage("Enter product name"),
   body("description").trim().notEmpty().withMessage("Enter description"),
-  body("category")
-    .isIn([
-      "Lego Sets",
-      "RC Cars",
-      "Hot Wheels",
-      "Nerf Blasters",
-      "Puzzles",
-      "Plush Toys",
-    ])
-    .withMessage("Select a valid category"),
+  body("category").trim().notEmpty().withMessage("Select a category"),
   check,
 ];

@@ -1,19 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { getCategoriesAdmin, upsertCategory } = require("../controllers/category");
+const {
+  getCategoriesAdmin,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} = require("../controllers/category");
 const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
 
-router.get(
-  "/admin/categories",
-  isAuthenticatedUser,
-  authorizeRoles("admin"),
-  getCategoriesAdmin,
-);
-router.put(
-  "/admin/category",
-  isAuthenticatedUser,
-  authorizeRoles("admin"),
-  upsertCategory,
-);
+const admin = [isAuthenticatedUser, authorizeRoles("admin")];
+
+router.get("/admin/categories", ...admin, getCategoriesAdmin);
+router.post("/admin/category", ...admin, createCategory);
+router.put("/admin/category/:id", ...admin, updateCategory);
+router.delete("/admin/category/:id", ...admin, deleteCategory);
 
 module.exports = router;

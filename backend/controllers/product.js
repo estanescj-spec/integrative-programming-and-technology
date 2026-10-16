@@ -2,19 +2,19 @@ const Product = require("../models/product");
 const { discountedPrice } = require("../utils/pricing");
 const { uploadImage, destroyImage } = require("../utils/cloudinary");
 
-const CATEGORIES = [
-  "Lego Sets",
-  "RC Cars",
-  "Hot Wheels",
-  "Nerf Blasters",
-  "Puzzles",
-  "Plush Toys",
-];
+const Category = require("../models/category");
+const { ensureSeed } = require("./category");
 
-exports.CATEGORIES = CATEGORIES;
-
-exports.getCategories = (req, res) => {
-  res.json({ success: true, categories: CATEGORIES });
+exports.getCategories = async (req, res) => {
+  try {
+    await ensureSeed();
+    const cats = await Category.find({ isDeleted: false }).sort({
+      createdAt: 1,
+    });
+    res.json({ success: true, categories: cats.map((c) => c.name) });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 exports.getProducts = async (req, res) => {
@@ -39,6 +39,7 @@ exports.getProducts = async (req, res) => {
     if (category) filter.category = category;
     if (minRating) filter.ratings = { $gte: Number(minRating) };
     if (hasReviews === "true") filter.numOfReviews = { $gt: 0 };
+    if (deals === "true") filter["variants.discountPercent"] = { $gt: 0 };
 
     let products = await Product.find(filter).sort({ createdAt: -1 });
 
@@ -104,8 +105,8 @@ exports.createProduct = async (req, res) => {
   try {
     const { name, description, category, variants, photos } = req.body;
 
-    if (category && !CATEGORIES.includes(category))
-      return res.status(400).json({ message: "Invalid category" });
+    if (!(await Category.findOne({ name: category, isDeleted: false })))
+      return res.status(400).json({ message: "Select a valid category" });
 
     const parsed = parseVariants(variants)?.map((v) => ({
       label: v.label,
@@ -147,8 +148,12 @@ exports.updateProduct = async (req, res) => {
     const { name, description, category, variants, photos, removePhotoIds } =
       req.body;
 
-    if (category && !CATEGORIES.includes(category))
-      return res.status(400).json({ message: "Invalid category" });
+    if (
+      category &&
+      category !== product.category &&
+      !(await Category.findOne({ name: category, isDeleted: false }))
+    )
+      return res.status(400).json({ message: "Select a valid category" });
     if (name) product.name = name;
     if (description) product.description = description;
     if (category) product.category = category;

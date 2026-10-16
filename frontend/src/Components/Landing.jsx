@@ -3,8 +3,6 @@ import { Play, Heart, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
-
   // Review state data matching screenshot
   const reviews = [
     {
@@ -54,21 +52,21 @@ export default function Landing() {
 
       {/* =========================================================================
           SECTION 1: HERO LANDING PAGE
-         ========================================================================= */}
+          ========================================================================= */}
       <section className="relative w-full min-h-screen flex flex-col justify-between bg-white overflow-hidden">
         {/* Hanging Upside-down Bowser Figure at Top Center */}
-        <div className="absolute top-[-25px] left-[27%] md:left-[29%] z-30 w-36 md:w-52 pointer-events-none transform -rotate-3">
+        <div className="absolute top-[0px] left-[27%] md:left-[29%] z-30 w-36 md:w-52 pointer-events-none transform -rotate-3">
           <img
-            src="https://m.media-amazon.com/images/I/81fH5iT3nTL._AC_SL1500_.jpg"
-            alt="LEGO Bowser upside down head"
-            className="w-full transform rotate-180 drop-shadow-xl"
+            src="/spiderman.png"
+            alt="Spiderman"
+            className="w-full drop-shadow-xl"
           />
         </div>
 
         {/* Confetti Particles - Hero */}
         <div className="absolute top-28 left-20 w-3 h-2 bg-[#E3000B] rotate-45 rounded-sm"></div>
-        <div className="absolute top-48 left-[45%] w-3.5 h-2.5 bg-[#00A651] -rotate-12 rounded-sm"></div>
-        <div className="absolute top-36 right-[40%] w-3 h-2 bg-[#FFCC00] rotate-12 rounded-sm"></div>
+        <div className="absolute top-48 left-[45%] w-3.5 h-2.5 bg-[#E3000B] -rotate-12 rounded-sm"></div>
+        <div className="absolute top-36 right-[40%] w-3 h-2 bg-[#1D4ED8] rotate-12 rounded-sm"></div>
         <div className="absolute bottom-32 right-[46%] w-4 h-2 bg-[#E3000B] -rotate-45 rounded-sm"></div>
 
         {/* Hero Content */}
@@ -87,34 +85,23 @@ export default function Landing() {
               the LEGO® Super Mario™ adventures they can have!
             </p>
 
-            {/* Brand Logos */}
-            <div className="flex items-center space-x-5 pt-2">
-              {/* LEGO Logo */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#E3000B] p-1 flex items-center justify-center rounded-sm shadow-md border-2 border-white">
-                <span className="text-white font-extrabold text-xl tracking-tighter border-2 border-yellow-300 px-1 py-0.5 uppercase leading-none text-center font-serif">
-                  LEGO
-                </span>
-              </div>
-
-              {/* Super Mario Custom Logo */}
-              <div className="flex flex-col font-black text-2xl sm:text-3xl tracking-tight leading-none uppercase">
-                <span className="text-[#FFCC00] drop-shadow-[0_2px_0_rgba(0,0,0,1)] tracking-normal">
-                  SUPER
-                </span>
-                <span className="text-[#E3000B] drop-shadow-[0_2px_0_rgba(0,0,0,1)]">
-                  MARIO
-                </span>
-              </div>
+            <div className="pt-2">
+              <Link
+                to="/shop"
+                className="inline-block bg-[#E3000B] hover:bg-red-700 text-white font-fredoka font-semibold text-lg px-8 py-3 rounded-full shadow-md transition-transform hover:scale-105"
+              >
+                Shop now
+              </Link>
             </div>
           </div>
 
           {/* Right Giant Bowser Stand */}
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
-            <div className="w-full max-w-xl relative">
+            <div className="w-full max-w-10xl relative">
               <img
-                src="https://m.media-amazon.com/images/I/81fH5iT3nTL._AC_SL1500_.jpg"
-                alt="LEGO Mighty Bowser"
-                className="w-full h-auto object-contain drop-shadow-2xl hover:scale-102 transition-transform duration-300"
+                src="/minecraft.png"
+                alt="Minecraft"
+                className="w-full h-auto object-contain drop-shadow-2xl scale-150"
               />
             </div>
           </div>
@@ -174,23 +161,23 @@ export default function Landing() {
 
         {/* Bottom Split Color Floor (Yellow / Green) */}
         <div className="w-full h-16 grid grid-cols-12 z-0">
-          <div className="col-span-6 bg-[#FFCC00]"></div>
-          <div className="col-span-6 bg-[#00A651]"></div>
+          <div className="col-span-6 bg-[#1D4ED8]"></div>
+          <div className="col-span-6 bg-[#E3000B]"></div>
         </div>
       </section>
 
       {/* =========================================================================
           SECTION 2: SPLIT UNIVERSE & REVIEWS FOLD
-         ========================================================================= */}
+          ========================================================================= */}
       <section
         id="reviews"
         className="relative w-full min-h-screen grid grid-cols-1 lg:grid-cols-2"
       >
         {/* LEFT HALF - YELLOW BACKGROUND */}
-        <div className="bg-[#FFCC00] relative px-8 sm:px-16 py-16 flex flex-col justify-between overflow-hidden">
+        <div className="bg-[#1D4ED8] relative px-8 sm:px-16 py-16 flex flex-col justify-between overflow-hidden">
           {/* Yellow Area Confetti */}
           <div className="absolute top-16 left-20 w-3 h-2 bg-[#E3000B] rotate-45 rounded-sm"></div>
-          <div className="absolute top-1/3 left-12 w-3 h-3 bg-[#00A651] -rotate-12 rounded-sm"></div>
+          <div className="absolute top-1/3 left-12 w-3 h-3 bg-[#E3000B] -rotate-12 rounded-sm"></div>
 
           {/* Bowser Figure Build Top Center */}
           <div className="flex justify-center pt-4 mb-8">
@@ -213,10 +200,10 @@ export default function Landing() {
                 className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
               />
               <div>
-                <h4 className="font-fredoka font-semibold text-gray-900 text-sm leading-tight">
+                <h4 className="font-fredoka font-semibold text-white text-sm leading-tight">
                   {reviews[activeReviewIdx].name}
                 </h4>
-                <p className="font-body text-[11px] text-gray-800 font-bold">
+                <p className="font-body text-[11px] text-blue-100 font-bold">
                   {reviews[activeReviewIdx].role}
                 </p>
               </div>
@@ -225,14 +212,14 @@ export default function Landing() {
             {/* Quote Block */}
             <div className="space-y-1">
               <div className="flex items-start space-x-2">
-                <span className="font-fredoka text-2xl font-bold text-black leading-none">
+                <span className="font-fredoka text-2xl font-bold text-white leading-none">
                   “
                 </span>
-                <h3 className="font-fredoka font-semibold text-gray-900 text-lg sm:text-xl tracking-tight">
+                <h3 className="font-fredoka font-semibold text-white text-lg sm:text-xl tracking-tight">
                   {reviews[activeReviewIdx].title}
                 </h3>
               </div>
-              <p className="font-body text-xs sm:text-sm text-gray-900 font-bold leading-relaxed pl-5">
+              <p className="font-body text-xs sm:text-sm text-white font-bold leading-relaxed pl-5">
                 {reviews[activeReviewIdx].quote}
               </p>
             </div>
@@ -244,7 +231,7 @@ export default function Landing() {
                   key={idx}
                   onClick={() => setActiveReviewIdx(idx)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    activeReviewIdx === idx ? "w-8 bg-black" : "w-3 bg-black/30"
+                    activeReviewIdx === idx ? "w-8 bg-white" : "w-3 bg-white/40"
                   }`}
                   aria-label={`Switch review ${idx + 1}`}
                 />
@@ -253,32 +240,8 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* CENTER INTERACTIVE PLAY BUTTON OVERLAY */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-center pointer-events-none">
-          <div
-            onClick={() => setIsVideoOpen(true)}
-            className="relative pointer-events-auto cursor-pointer group flex flex-col items-center"
-          >
-            {/* Lego Characters Stand */}
-            <div className="w-64 sm:w-80 relative flex items-center justify-center">
-              <img
-                src="https://m.media-amazon.com/images/I/71R2o583nBL._AC_SL1500_.jpg"
-                alt="LEGO Shy Guy and Yoshi"
-                className="w-full h-auto drop-shadow-2xl transform group-hover:scale-105 transition-transform duration-300"
-              />
-
-              {/* Play Button Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 border-2 border-white">
-                  <Play className="w-7 h-7 text-black fill-black ml-1" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* RIGHT HALF - GREEN BACKGROUND WITH CONCENTRIC RINGS */}
-        <div className="bg-[#00A651] relative px-8 sm:px-16 py-16 flex flex-col justify-center text-white overflow-hidden">
+        <div className="bg-[#E3000B] relative px-8 sm:px-16 py-16 flex flex-col justify-center text-white overflow-hidden">
           {/* Concentric Circle Pattern */}
           <div className="absolute inset-0 pointer-events-none opacity-10 flex items-center justify-center">
             <div className="w-[900px] h-[900px] rounded-full border-[50px] border-white"></div>
@@ -287,8 +250,8 @@ export default function Landing() {
           </div>
 
           {/* Confetti */}
-          <div className="absolute top-16 right-20 w-3 h-2 bg-[#FFCC00] rotate-12 rounded-sm"></div>
-          <div className="absolute bottom-20 right-32 w-4 h-2 bg-[#E3000B] -rotate-45 rounded-sm"></div>
+          <div className="absolute top-16 right-20 w-3 h-2 bg-[#1D4ED8] rotate-12 rounded-sm"></div>
+          <div className="absolute bottom-20 right-32 w-4 h-2 bg-white -rotate-45 rounded-sm"></div>
 
           {/* Content Block */}
           <div className="max-w-md mx-auto lg:ml-28 z-10 space-y-4">
@@ -297,7 +260,7 @@ export default function Landing() {
               out there
             </h2>
 
-            <p className="font-body text-xs sm:text-sm text-green-50 font-semibold leading-relaxed opacity-95">
+            <p className="font-body text-xs sm:text-sm text-white font-semibold leading-relaxed opacity-95">
               With LEGO® Super Mario™, kids can team up with or battle their
               favorite characters from across the Super Mario™ universe! Also we
               chatted to the great minds behind this fan-favorite LEGO theme.
@@ -314,31 +277,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
-      {/* =========================================================================
-          LIGHTBOX VIDEO MODAL
-         ========================================================================= */}
-      {isVideoOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="relative w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
-            <button
-              onClick={() => setIsVideoOpen(false)}
-              className="absolute top-4 right-4 z-10 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <div className="aspect-video w-full">
-              <iframe
-                className="w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                title="LEGO Super Mario Showcase Video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

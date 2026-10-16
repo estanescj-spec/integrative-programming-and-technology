@@ -1,16 +1,41 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, User, LogOut, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Search,
+  ShoppingBag,
+  User,
+  LogOut,
+  X,
+  ChevronDown,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import api from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
-
-const linkCls = ({ isActive }) =>
-  `hover:text-red-600 transition-colors ${isActive ? "text-red-600" : "text-gray-800"}`;
 
 export default function Header() {
   const { user, logout } = useAuth();
   const { count } = useCart();
   const navigate = useNavigate();
+
+  const { pathname, search } = useLocation();
+  const q = new URLSearchParams(search);
+  const onShop = pathname === "/shop";
+  const isDeals = onShop && q.get("deals") === "true";
+  const isCategory = onShop && !!q.get("category");
+  const isProducts = onShop && !isDeals && !isCategory;
+
+  const underline = (active) =>
+    `text-black pb-1 border-b-2 transition-colors ${
+      active ? "border-black" : "border-transparent hover:border-black"
+    }`;
+
+  const [cats, setCats] = useState([]);
+  useEffect(() => {
+    api
+      .get("/products/categories")
+      .then(({ data }) => setCats(data.categories))
+      .catch(() => {});
+  }, []);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -36,35 +61,66 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white shadow-xs">
-      <div className="max-w-7xl mx-auto w-full px-6 md:px-12 py-5 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-white ">
+      <div className="max-w-7xl mx-auto w-full px-6 md:px-12 pt-7 pb-6 flex items-center justify-between">
         <Link
           to="/"
-          className="text-2xl font-bold tracking-tight text-black uppercase"
+          className="text-3xl font-bold tracking-tight text-black uppercase"
           style={{ fontFamily: "'Fredoka','Nunito',sans-serif" }}
         >
-          Toy Haven
+          T o y H a v e n
         </Link>
 
         <nav
-          className="hidden md:flex items-center space-x-10 text-[12px] font-extrabold tracking-widest uppercase"
+          className="hidden md:flex items-center space-x-8 text-[12px] font-extrabold tracking-widest uppercase"
           style={{ fontFamily: "'Nunito',sans-serif" }}
         >
-          <NavLink to="/" end className={linkCls}>
+          <Link to="/" className={underline(pathname === "/")}>
             Home
-          </NavLink>
-          <NavLink to="/shop" className={linkCls}>
-            Our Collection
-          </NavLink>
+          </Link>
+          <Link to="/shop" className={underline(isProducts)}>
+            Products
+          </Link>
+
+          <div className="relative group">
+            <button
+              type="button"
+              className={`${underline(isCategory)} flex items-center gap-1 uppercase`}
+            >
+              Categories <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            <div className="absolute left-0 top-full pt-3 hidden group-hover:block group-focus-within:block z-50">
+              <ul className="bg-white border border-gray-200 rounded-xl shadow-lg py-2 min-w-48 normal-case tracking-normal">
+                {cats.map((c) => (
+                  <li key={c}>
+                    <Link
+                      to={`/shop?category=${encodeURIComponent(c)}`}
+                      className="block px-4 py-2 text-sm font-semibold text-black hover:bg-gray-100"
+                    >
+                      {c}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <Link to="/shop?deals=true" className={underline(isDeals)}>
+            Deals
+          </Link>
+
           {user?.role === "customer" && (
-            <NavLink to="/orders" className={linkCls}>
+            <Link
+              to="/orders"
+              className={underline(pathname.startsWith("/orders"))}
+            >
               Orders
-            </NavLink>
+            </Link>
           )}
           {user?.role === "admin" && (
-            <NavLink to="/admin" className={linkCls}>
+            <Link to="/admin" className={underline(false)}>
               Admin
-            </NavLink>
+            </Link>
           )}
         </nav>
 
@@ -102,20 +158,20 @@ export default function Header() {
             type="button"
             aria-label="Search"
             onClick={() => setSearchOpen((o) => !o)}
-            className="hover:text-red-600 transition-colors p-1"
+            className="hover:text-blue-700 transition-colors p-1"
           >
-            <Search className="w-5 h-5 stroke-[2.2]" />
+            <Search className="w-6 h-6 stroke-[2.2]" />
           </button>
 
           {user?.role !== "admin" && (
             <Link
               to="/cart"
               aria-label="Cart"
-              className="relative hover:text-red-600 transition-colors p-1"
+              className="relative hover:text-blue-700 transition-colors p-1"
             >
-              <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
+              <ShoppingBag className="w-6 h-6 stroke-[2.2]" />
               {count > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-[10px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center">
                   {count}
                 </span>
               )}
@@ -125,18 +181,18 @@ export default function Header() {
           <Link
             to={user ? "/profile" : "/login"}
             aria-label="Account"
-            className="hover:text-red-600 transition-colors p-1"
+            className="hover:text-blue-700 transition-colors p-1"
           >
-            <User className="w-5 h-5 stroke-[2.2]" />
+            <User className="w-6 h-6 stroke-[2.2]" />
           </Link>
 
           {user && (
             <button
               onClick={onLogout}
               aria-label="Logout"
-              className="hover:text-red-600 transition-colors p-1"
+              className="hover:text-blue-700 transition-colors p-1"
             >
-              <LogOut className="w-5 h-5 stroke-[2.2]" />
+              <LogOut className="w-6 h-6 stroke-[2.2]" />
             </button>
           )}
         </div>
