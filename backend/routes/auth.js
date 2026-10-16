@@ -8,15 +8,18 @@ const {
   getProfile,
   googleLogin,
   updateProfile,
+  resendVerification,
 } = require("../controllers/auth");
 const { isAuthenticatedUser } = require("../middlewares/auth");
+const { registerRules } = require("../middlewares/validate");
 
-router.post("/register", registerUser);
+router.post("/register", registerRules, registerUser);
 router.get("/verify/:token", verifyEmail);
 router.post("/login", loginUser);
 router.get("/logout", logout);
 router.get("/me", isAuthenticatedUser, getProfile);
 router.put("/me", isAuthenticatedUser, updateProfile);
 router.post("/google-login", googleLogin);
+router.post("/resend-verification", resendVerification);
 
 module.exports = router;

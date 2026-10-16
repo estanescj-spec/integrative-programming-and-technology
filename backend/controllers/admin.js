@@ -43,19 +43,24 @@ exports.getDashboard = async (req, res) => {
       const ot = orderTotal(o);
       userMap[uname] = (userMap[uname] || 0) + ot;
       o.items.forEach((item) => {
-        productMap[item.name] = (productMap[item.name] || 0) + item.unitPrice * item.quantity;
+        productMap[item.name] =
+          (productMap[item.name] || 0) + item.unitPrice * item.quantity;
       });
     });
 
     const productsAll = await Product.find({ isDeleted: false });
-    const nameToCat = Object.fromEntries(productsAll.map((p) => [p.name, p.category]));
+    const nameToCat = Object.fromEntries(
+      productsAll.map((p) => [p.name, p.category]),
+    );
     Object.entries(productMap).forEach(([name, amt]) => {
       const cat = nameToCat[name] || "Other";
       categoryMap[cat] = (categoryMap[cat] || 0) + amt;
     });
 
     const toBreakdown = (map) => {
-      const entries = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const entries = Object.entries(map)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
       const sum = entries.reduce((s, [, v]) => s + v, 0) || 1;
       return entries.map(([name, amount]) => ({
         name,
@@ -95,6 +100,10 @@ exports.getUsers = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
+    if (req.params.id === String(req.user._id))
+      return res
+        .status(400)
+        .json({ message: "You can't change your own account here" });
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     const { name, role, isActive } = req.body;
@@ -110,6 +119,10 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
+    if (req.params.id === String(req.user._id))
+      return res
+        .status(400)
+        .json({ message: "You can't change your own account here" });
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     user.isDeleted = true;

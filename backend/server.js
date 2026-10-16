@@ -1,3 +1,6 @@
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
 const dotenv = require("dotenv");
 dotenv.config({ path: "./config/.env" });
 
@@ -6,11 +9,6 @@ const connectDatabase = require("./config/database");
 
 const User = require("./models/user");
 const seedProducts = require("./utils/seed");
-
-connectDatabase().then(async () => {
-  await ensureAdmin().catch((err) => console.log(err.message));
-  await seedProducts().catch((err) => console.log(err.message));
-});
 
 const ensureAdmin = async () => {
   const exists = await User.findOne({ role: "admin", isDeleted: false });
@@ -26,6 +24,10 @@ const ensureAdmin = async () => {
   }
 };
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server on port ${process.env.PORT} (${process.env.NODE_ENV})`);
+connectDatabase().then(async () => {
+  await ensureAdmin();
+  // await seedProducts(); // uncomment if your seed function should run on startup
+  app.listen(process.env.PORT, () =>
+    console.log(`Server on port ${process.env.PORT} (${process.env.NODE_ENV})`),
+  );
 });

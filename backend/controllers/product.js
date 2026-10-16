@@ -31,7 +31,11 @@ exports.getProducts = async (req, res) => {
     } = req.query;
 
     const filter = { isDeleted: false };
-    if (keyword) filter.name = { $regex: keyword, $options: "i" };
+    if (keyword)
+      filter.name = {
+        $regex: keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        $options: "i",
+      };
     if (category) filter.category = category;
     if (minRating) filter.ratings = { $gte: Number(minRating) };
     if (hasReviews === "true") filter.numOfReviews = { $gt: 0 };
@@ -99,6 +103,10 @@ const parseVariants = (variants) => {
 exports.createProduct = async (req, res) => {
   try {
     const { name, description, category, variants, photos } = req.body;
+
+    if (category && !CATEGORIES.includes(category))
+      return res.status(400).json({ message: "Invalid category" });
+
     const parsed = parseVariants(variants)?.map((v) => ({
       label: v.label,
       price: Number(v.price),
@@ -130,15 +138,32 @@ exports.createProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     const { name, description, category, variants, photos, removePhotoIds } =
       req.body;
+
+    if (category && !CATEGORIES.includes(category))
+      return res.status(400).json({ message: "Invalid category" });
     if (name) product.name = name;
     if (description) product.description = description;
     if (category) product.category = category;
-    if (variants) product.variants = parseVariants(variants);
+    if (variants) {
+      const parsed = parseVariants(variants).map((v) => ({
+        ...(v._id && { _id: v._id }),
+        label: v.label,
+        price: Number(v.price),
+        discountPercent: Number(v.discountPercent || 0),
+        stock: Number(v.stock),
+      }));
+      if (!parsed.length)
+        return res.status(400).json({ message: "Add at least one variant" });
+      product.variants = parsed;
+    }
 
     if (Array.isArray(removePhotoIds) && removePhotoIds.length) {
       for (const id of removePhotoIds) {
@@ -164,7 +189,10 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
     if (!product) return res.status(404).json({ message: "Product not found" });
     product.isDeleted = true;
     await product.save();

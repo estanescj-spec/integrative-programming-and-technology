@@ -10,10 +10,8 @@ const {
   deleteProduct,
   bulkDeleteProducts,
 } = require("../controllers/product");
-const {
-  isAuthenticatedUser,
-  authorizeRoles,
-} = require("../middlewares/auth");
+const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
+const { productRules } = require("../middlewares/validate");
 
 router.get("/products", getProducts);
 router.get("/products/categories", getCategories);
@@ -29,6 +27,7 @@ router.post(
   "/admin/product",
   isAuthenticatedUser,
   authorizeRoles("admin"),
+  productRules,
   createProduct,
 );
 router.put(

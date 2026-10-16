@@ -89,6 +89,36 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
+exports.resendVerification = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      email: req.body.email,
+      isDeleted: false,
+    });
+    if (user && !user.isVerified) {
+      const token = user.getVerifyToken();
+      await user.save();
+      const url = `${req.protocol}://${req.get("host")}/api/v1/verify/${token}`;
+      console.log("VERIFY LINK:", url);
+      try {
+        await sendEmail({
+          email: user.email,
+          subject: "Toy Haven - Verify your email",
+          message: `<a href="${url}">${url}</a>`,
+        });
+      } catch (e) {
+        console.log("Email not sent:", e.message);
+      }
+    }
+    res.json({
+      success: true,
+      message: "If the account exists, a new link was sent.",
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
