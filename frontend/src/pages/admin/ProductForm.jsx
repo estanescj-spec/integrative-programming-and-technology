@@ -44,14 +44,19 @@ export default function ProductForm() {
       name: "",
       description: "",
       category: "Lego Sets",
-      variants: [{ label: "Standard", price: 0, discountPercent: 0, stock: 0 }],
+      variants: [{ label: "", price: 0, discountPercent: 0, stock: 0 }],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "variants" });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
   useEffect(() => {
-    api.get("/products/categories").then(({ data }) => setCategories(data.categories));
+    api
+      .get("/products/categories")
+      .then(({ data }) => setCategories(data.categories));
     if (id) {
       api.get(`/product/${id}`).then(({ data }) => {
         const p = data.product;
@@ -73,7 +78,9 @@ export default function ProductForm() {
 
   const onSubmit = async (values) => {
     try {
-      const photos = values.photos?.length ? await filesToDataUrls(values.photos) : [];
+      const photos = values.photos?.length
+        ? await filesToDataUrls(values.photos)
+        : [];
       const payload = {
         name: values.name,
         description: values.description,
@@ -93,28 +100,46 @@ export default function ProductForm() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-navy-900 mb-5">{id ? "Edit product" : "New product"}</h2>
+      <h2 className="text-2xl font-bold text-navy-900 mb-5">
+        {id ? "Edit product" : "New product"}
+      </h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-white rounded-2xl border border-slate-200/70 card-shadow p-6 space-y-4 max-w-3xl"
       >
         <div>
-          <label className="text-xs font-bold uppercase text-slate-400">Name</label>
-          <input {...register("name")} className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2" />
-          {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
+          <label className="text-xs font-bold uppercase text-slate-400">
+            Name
+          </label>
+          <input
+            {...register("name")}
+            className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2"
+          />
+          {errors.name && (
+            <p className="text-red-500 text-xs">{errors.name.message}</p>
+          )}
         </div>
         <div>
-          <label className="text-xs font-bold uppercase text-slate-400">Description</label>
+          <label className="text-xs font-bold uppercase text-slate-400">
+            Description
+          </label>
           <textarea
             {...register("description")}
             rows={4}
             className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2"
           />
-          {errors.description && <p className="text-red-500 text-xs">{errors.description.message}</p>}
+          {errors.description && (
+            <p className="text-red-500 text-xs">{errors.description.message}</p>
+          )}
         </div>
         <div>
-          <label className="text-xs font-bold uppercase text-slate-400">Category</label>
-          <select {...register("category")} className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2">
+          <label className="text-xs font-bold uppercase text-slate-400">
+            Category
+          </label>
+          <select
+            {...register("category")}
+            className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2"
+          >
             {categories.map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -122,19 +147,35 @@ export default function ProductForm() {
         </div>
         <div>
           <div className="flex justify-between items-center">
-            <label className="text-xs font-bold uppercase text-slate-400">Variants</label>
+            <label className="text-xs font-bold uppercase text-slate-400">
+              Variants
+            </label>
             <button
               type="button"
-              onClick={() => append({ label: "", price: 0, discountPercent: 0, stock: 0 })}
+              onClick={() =>
+                append({ label: "", price: 0, discountPercent: 0, stock: 0 })
+              }
               className="text-xs font-bold text-electric-600"
             >
               Add variant
             </button>
           </div>
+
+          <div className="hidden md:grid grid-cols-5 gap-2 mt-2 text-[11px] font-bold uppercase text-slate-400">
+            <span>Option</span>
+            <span>Price (₱)</span>
+            <span>Discount %</span>
+            <span>Stock</span>
+            <span />
+          </div>
+
           {fields.map((field, i) => (
-            <div key={field.id} className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
+            <div
+              key={field.id}
+              className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2"
+            >
               <input
-                placeholder="Label"
+                placeholder="e.g. Red, Large, Deluxe Edition"
                 {...register(`variants.${i}.label`)}
                 className="border border-slate-200 rounded-xl px-2 py-2 text-sm"
               />
@@ -146,7 +187,7 @@ export default function ProductForm() {
               />
               <input
                 type="number"
-                placeholder="Discount %"
+                placeholder="0-100"
                 {...register(`variants.${i}.discountPercent`)}
                 className="border border-slate-200 rounded-xl px-2 py-2 text-sm"
               />
@@ -156,27 +197,48 @@ export default function ProductForm() {
                 {...register(`variants.${i}.stock`)}
                 className="border border-slate-200 rounded-xl px-2 py-2 text-sm"
               />
-              <button type="button" onClick={() => remove(i)} className="text-red-500 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="text-red-500 text-xs font-bold"
+              >
                 Remove
               </button>
             </div>
           ))}
+
           {errors.variants && (
-            <p className="text-red-500 text-xs">{errors.variants.message || errors.variants.root?.message}</p>
+            <p className="text-red-500 text-xs">
+              {errors.variants.message || errors.variants.root?.message}
+            </p>
           )}
         </div>
         <div>
-          <label className="text-xs font-bold uppercase text-slate-400">Photos (multiple)</label>
-          <input type="file" accept="image/*" multiple {...register("photos")} className="mt-1 block text-sm" />
+          <label className="text-xs font-bold uppercase text-slate-400">
+            Photos (multiple)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            {...register("photos")}
+            className="mt-1 block text-sm"
+          />
           <div className="flex gap-2 mt-3 flex-wrap">
             {existingPhotos
               .filter((p) => !removePhotoIds.includes(p.public_id))
               .map((p) => (
                 <div key={p.public_id} className="relative">
-                  <img src={p.url} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                  <img
+                    src={p.url}
+                    alt=""
+                    className="w-16 h-16 rounded-xl object-cover"
+                  />
                   <button
                     type="button"
-                    onClick={() => setRemovePhotoIds((ids) => [...ids, p.public_id])}
+                    onClick={() =>
+                      setRemovePhotoIds((ids) => [...ids, p.public_id])
+                    }
                     className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs"
                   >
                     ×

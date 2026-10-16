@@ -17,15 +17,23 @@ export default function Shop() {
   const [filters, setFilters] = useState({
     ...empty,
     category: params.get("category") || "",
+    keyword: params.get("keyword") || "",
   });
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const kw = params.get("keyword") || "";
+  useEffect(() => {
+    setFilters((f) => (f.keyword === kw ? f : { ...f, keyword: kw }));
+    setPage(1);
+  }, [kw]);
 
   useEffect(() => {
-    api.get("/products/categories").then(({ data }) => setCategories(data.categories));
+    api
+      .get("/products/categories")
+      .then(({ data }) => setCategories(data.categories));
   }, []);
 
   useEffect(() => {
@@ -49,11 +57,11 @@ export default function Shop() {
   const set = (key, value) => {
     setPage(1);
     setFilters((f) => ({ ...f, [key]: value }));
-    if (key === "category") {
+    if (key === "category" || key === "keyword") {
       const next = new URLSearchParams(params);
-      if (value) next.set("category", value);
-      else next.delete("category");
-      setParams(next);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      setParams(next, { replace: true });
     }
   };
 
@@ -61,14 +69,18 @@ export default function Shop() {
     <div className="max-w-6xl mx-auto px-4 py-8 grid lg:grid-cols-[260px_1fr] gap-6">
       <aside className="bg-white rounded-2xl border border-slate-200/70 card-shadow p-5 h-fit">
         <h2 className="font-extrabold text-navy-900 mb-4">Filters</h2>
-        <label className="text-[11px] font-bold text-slate-400 uppercase">Search</label>
+        <label className="text-[11px] font-bold text-slate-400 uppercase">
+          Search
+        </label>
         <input
           value={filters.keyword}
           onChange={(e) => set("keyword", e.target.value)}
           className="w-full mt-1 mb-3 border border-slate-200 rounded-xl px-3 py-2 text-sm"
           placeholder="Toy name"
         />
-        <label className="text-[11px] font-bold text-slate-400 uppercase">Category</label>
+        <label className="text-[11px] font-bold text-slate-400 uppercase">
+          Category
+        </label>
         <select
           value={filters.category}
           onChange={(e) => set("category", e.target.value)}
@@ -79,7 +91,9 @@ export default function Shop() {
             <option key={c}>{c}</option>
           ))}
         </select>
-        <label className="text-[11px] font-bold text-slate-400 uppercase">Price</label>
+        <label className="text-[11px] font-bold text-slate-400 uppercase">
+          Price
+        </label>
         <div className="flex gap-2 mt-1 mb-3">
           <input
             type="number"
@@ -96,7 +110,9 @@ export default function Shop() {
             className="w-full border border-slate-200 rounded-xl px-2 py-2 text-sm"
           />
         </div>
-        <label className="text-[11px] font-bold text-slate-400 uppercase">Min rating</label>
+        <label className="text-[11px] font-bold text-slate-400 uppercase">
+          Min rating
+        </label>
         <select
           value={filters.minRating}
           onChange={(e) => set("minRating", e.target.value)}
@@ -138,7 +154,9 @@ export default function Shop() {
           ))}
         </div>
         {!products.length && (
-          <p className="text-slate-400 mt-10 text-center">No toys match those filters.</p>
+          <p className="text-slate-400 mt-10 text-center">
+            No toys match those filters.
+          </p>
         )}
         {pages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
@@ -147,7 +165,9 @@ export default function Shop() {
                 key={n}
                 onClick={() => setPage(n)}
                 className={`w-10 h-10 rounded-xl text-sm font-bold ${
-                  n === page ? "bg-electric-600 text-white" : "bg-white border border-slate-200"
+                  n === page
+                    ? "bg-electric-600 text-white"
+                    : "bg-white border border-slate-200"
                 }`}
               >
                 {n}
