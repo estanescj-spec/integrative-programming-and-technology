@@ -26,7 +26,7 @@ const ensureAdmin = async () => {
 
 connectDatabase().then(async () => {
   await ensureAdmin();
-  // await seedProducts(); // uncomment if your seed function should run on startup
+  await seedProducts(); // uncomment if your seed function should run on startup
   app.listen(process.env.PORT, () =>
     console.log(`Server on port ${process.env.PORT} (${process.env.NODE_ENV})`),
   );

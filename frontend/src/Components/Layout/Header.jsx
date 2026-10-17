@@ -118,7 +118,10 @@ export default function Header() {
             </Link>
           )}
           {user?.role === "admin" && (
-            <Link to="/admin" className={underline(false)}>
+            <Link
+              to="/admin"
+              className="bg-[#E3000B] hover:bg-red-700 text-white px-5 py-2 rounded-full shadow-md transition-transform hover:scale-105"
+            >
               Admin
             </Link>
           )}
