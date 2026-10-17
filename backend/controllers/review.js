@@ -50,7 +50,9 @@ exports.createReview = async (req, res) => {
       product: productId,
     });
     if (existing)
-      return res.status(400).json({ message: "You already reviewed this product" });
+      return res
+        .status(400)
+        .json({ message: "You already reviewed this product" });
 
     const review = await Review.create({
       user: req.user._id,
@@ -86,6 +88,11 @@ exports.deleteReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
     if (!review) return res.status(404).json({ message: "Review not found" });
+    if (
+      review.user.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    )
+      return res.status(403).json({ message: "Not allowed" });
     const productId = review.product;
     await review.deleteOne();
     await recalcRatings(productId);

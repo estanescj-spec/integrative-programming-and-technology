@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -16,6 +16,7 @@ const reviewSchema = yup.object({
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { refresh } = useCart();
   const [product, setProduct] = useState(null);
@@ -45,10 +46,16 @@ export default function ProductDetail() {
   };
 
   useEffect(() => {
-    api.get(`/product/${id}`).then(({ data }) => {
-      setProduct(data.product);
-      setVariant(data.product.variants?.[0]?.label || "");
-    });
+    api
+      .get(`/product/${id}`)
+      .then(({ data }) => {
+        setProduct(data.product);
+        setVariant(data.product.variants?.[0]?.label || "");
+      })
+      .catch(() => {
+        toast.error("Product not found");
+        navigate("/shop");
+      });
   }, [id]);
 
   useEffect(() => {
@@ -69,9 +76,9 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="w-full min-h-[60vh] flex items-center justify-center text-slate-400 gap-3">
+      <div className="w-full min-h-[60vh] flex items-center justify-center text-gray-400 gap-3">
         <svg
-          className="animate-spin h-6 w-6 text-indigo-600"
+          className="animate-spin h-6 w-6 text-[#E3000B]"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -131,13 +138,27 @@ export default function ProductDetail() {
     }
   };
 
+  const removeReview = async () => {
+    if (!window.confirm("Delete your review?")) return;
+    try {
+      await api.delete(`/review/${mine._id}`);
+      form.reset({ rating: 5, comment: "" });
+      const { data } = await api.get(`/product/${id}`);
+      setProduct(data.product);
+      await loadReviews(minRating);
+      toast.success("Review deleted");
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
   return (
-    <div className="w-full min-h-screen bg-white text-slate-900 px-6 sm:px-10 lg:px-16 py-10 lg:py-14">
+    <div className="w-full min-h-screen bg-white text-black px-6 sm:px-10 lg:px-16 py-10 lg:py-14">
       {/* Product Display Section (Full Width End-to-End) */}
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
         {/* Left: Product Images */}
         <div className="flex flex-col gap-4">
-          <div className="bg-slate-50 rounded-3xl border border-slate-200/80 overflow-hidden aspect-square relative shadow-sm">
+          <div className="bg-gray-50 rounded-3xl border border-gray-200/80 overflow-hidden aspect-square relative shadow-sm">
             {product.photos?.[photo]?.url ? (
               <img
                 src={product.photos[photo].url}
@@ -145,7 +166,7 @@ export default function ProductDetail() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-3">
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-3">
                 <svg
                   className="w-16 h-16 opacity-50"
                   fill="none"
@@ -171,10 +192,10 @@ export default function ProductDetail() {
                 <button
                   key={p.public_id || i}
                   onClick={() => setPhoto(i)}
-                  className={`w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 bg-slate-50 ${
+                  className={`w-20 h-20 rounded-full overflow-hidden border-2 transition-all flex-shrink-0 bg-gray-50 ${
                     i === photo
-                      ? "border-indigo-600 scale-105 shadow-md"
-                      : "border-slate-200/80 hover:border-slate-300 opacity-70 hover:opacity-100"
+                      ? "border-[#E3000B] scale-105 shadow-md"
+                      : "border-gray-200/80 hover:border-gray-300 opacity-70 hover:opacity-100"
                   }`}
                 >
                   <img
@@ -191,42 +212,45 @@ export default function ProductDetail() {
         {/* Right: Product Details & Purchase Controls */}
         <div className="flex flex-col">
           {/* Category Badge */}
-          <span className="inline-self-start text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md border border-indigo-100/60 w-fit">
+          <span className="inline-self-start text-xs font-bold uppercase tracking-wider text-[#E3000B] bg-red-50 px-3 py-1 rounded-md border border-red-100 w-fit">
             {product.category}
           </span>
 
           {/* Product Title */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight mt-3">
+          <h1 className="font-fredoka text-3xl sm:text-4xl lg:text-5xl font-semibold text-black tracking-tight mt-3">
             {product.name}
           </h1>
 
           {/* Rating Summary */}
           <div className="flex items-center gap-2 mt-3 text-amber-400 text-sm font-bold">
             <span>{stars(product.ratings)}</span>
-            <span className="text-slate-500 font-medium text-xs sm:text-sm">
+            <span className="text-gray-500 font-medium text-xs sm:text-sm">
               ({product.ratings} stars · {product.numOfReviews} reviews)
             </span>
           </div>
 
           {/* Description */}
-          <p className="text-slate-600 mt-6 text-base sm:text-lg leading-relaxed whitespace-pre-wrap border-t border-slate-100 pt-6">
+          <p className="text-gray-600 mt-6 text-base sm:text-lg leading-relaxed whitespace-pre-wrap border-t border-gray-100 pt-6">
             {product.description}
           </p>
 
           {/* Variant Selector */}
           <div className="mt-8">
-            <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3">
+            <p className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-3">
               Select Variant
             </p>
             <div className="flex flex-wrap gap-3">
               {product.variants.map((opt) => (
                 <button
                   key={opt.label}
-                  onClick={() => setVariant(opt.label)}
-                  className={`px-5 py-3 rounded-2xl text-sm font-bold border transition-all duration-200 ${
+                  onClick={() => {
+                    setVariant(opt.label);
+                    setQty(1);
+                  }}
+                  className={`px-5 py-3 rounded-full text-sm font-bold border transition-all duration-200 ${
                     variant === opt.label
-                      ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20"
-                      : "bg-white border-slate-200 hover:border-slate-300 text-slate-700"
+                      ? "bg-[#E3000B] text-white border-[#E3000B] shadow-lg shadow-[#E3000B]/20"
+                      : "bg-white border-gray-200 hover:border-gray-300 text-gray-700"
                   }`}
                 >
                   {opt.label} · {peso(discountedPrice(opt))}
@@ -236,8 +260,8 @@ export default function ProductDetail() {
           </div>
 
           {/* Price & Stock status */}
-          <div className="mt-8 pt-6 border-t border-slate-100 flex items-baseline gap-4">
-            <span className="text-4xl font-black text-slate-900 tracking-tight">
+          <div className="mt-8 pt-6 border-t border-gray-100 flex items-baseline gap-4">
+            <span className="text-4xl font-black text-black tracking-tight">
               {peso(discountedPrice(v))}
             </span>
             <span
@@ -250,11 +274,11 @@ export default function ProductDetail() {
           {/* Actions Bar */}
           <div className="flex flex-wrap items-center gap-4 mt-6">
             {/* Quantity Selector */}
-            <div className="flex items-center border border-slate-200 rounded-2xl p-1 bg-slate-50/50">
+            <div className="flex items-center border border-gray-200 rounded-full p-1 bg-gray-50/50">
               <button
                 type="button"
                 onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-                className="w-10 h-10 flex items-center justify-center font-bold text-slate-600 hover:bg-white rounded-xl transition-colors"
+                className="w-10 h-10 flex items-center justify-center font-bold text-gray-600 hover:bg-white rounded-full transition-colors"
               >
                 -
               </button>
@@ -271,14 +295,14 @@ export default function ProductDetail() {
                     ),
                   )
                 }
-                className="w-12 text-center font-bold text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0 text-sm"
+                className="w-12 text-center font-bold text-black bg-transparent border-none focus:outline-none focus:ring-0 text-sm"
               />
               <button
                 type="button"
                 onClick={() =>
                   setQty((prev) => Math.min(v?.stock || 1, prev + 1))
                 }
-                className="w-10 h-10 flex items-center justify-center font-bold text-slate-600 hover:bg-white rounded-xl transition-colors"
+                className="w-10 h-10 flex items-center justify-center font-bold text-gray-600 hover:bg-white rounded-full transition-colors"
               >
                 +
               </button>
@@ -288,7 +312,7 @@ export default function ProductDetail() {
             <button
               onClick={add}
               disabled={!v?.stock}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-indigo-600/20 transition-all duration-200 transform hover:-translate-y-0.5"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center bg-[#E3000B] hover:bg-red-700 disabled:bg-gray-300 text-white font-bold px-8 py-4 rounded-full shadow-lg shadow-[#E3000B]/20 transition-all duration-200 transform hover:-translate-y-0.5"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -310,13 +334,13 @@ export default function ProductDetail() {
       </div>
 
       {/* Reviews Section (Full Width) */}
-      <section className="mt-16 bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-10 shadow-sm">
+      <section className="mt-16 bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-10 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="font-fredoka text-2xl sm:text-3xl font-semibold text-black tracking-tight">
               Customer Reviews
             </h2>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-gray-500 text-sm mt-1">
               See what other buyers think of this toy
             </p>
           </div>
@@ -324,7 +348,7 @@ export default function ProductDetail() {
           <select
             value={minRating}
             onChange={(e) => setMinRating(e.target.value)}
-            className="border border-slate-200 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="border border-gray-200 rounded-full px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E3000B]/20"
           >
             <option value="">All ratings</option>
             {[5, 4, 3, 2, 1].map((n) => (
@@ -339,19 +363,19 @@ export default function ProductDetail() {
         {canReview && (
           <form
             onSubmit={form.handleSubmit(saveReview)}
-            className="mb-10 bg-slate-50/80 p-6 rounded-2xl border border-slate-200/60"
+            className="mb-10 bg-gray-50/80 p-6 rounded-3xl border border-gray-200/60"
           >
-            <h3 className="text-base font-extrabold text-slate-900 mb-4">
+            <h3 className="text-base font-extrabold text-black mb-4">
               {mine ? "Update your review" : "Write a review"}
             </h3>
 
             <div className="mb-4">
-              <label className="block text-xs font-bold uppercase text-slate-400 mb-2">
+              <label className="block text-xs font-bold uppercase text-gray-400 mb-2">
                 Rating
               </label>
               <select
                 {...form.register("rating")}
-                className="border border-slate-200 rounded-xl px-4 py-2 text-sm font-semibold text-slate-800 bg-white"
+                className="border border-gray-200 rounded-full px-4 py-2 text-sm font-semibold text-gray-800 bg-white"
               >
                 {[5, 4, 3, 2, 1].map((n) => (
                   <option key={n} value={n}>
@@ -362,13 +386,13 @@ export default function ProductDetail() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-bold uppercase text-slate-400 mb-2">
+              <label className="block text-xs font-bold uppercase text-gray-400 mb-2">
                 Comment
               </label>
               <textarea
                 {...form.register("comment")}
                 rows={3}
-                className="w-full border border-slate-200 focus:border-indigo-500 rounded-xl p-3 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full border border-gray-200 focus:border-[#E3000B] rounded-3xl p-3 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#E3000B]/20"
                 placeholder="How was the toy?"
               />
               {form.formState.errors.comment && (
@@ -378,32 +402,42 @@ export default function ProductDetail() {
               )}
             </div>
 
-            <button className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors">
+            <button className="bg-[#E3000B] hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-full text-sm transition-colors">
               {mine ? "Save changes" : "Post review"}
             </button>
+
+            {mine && (
+              <button
+                type="button"
+                onClick={removeReview}
+                className="ml-3 border-2 border-[#E3000B] text-[#E3000B] hover:bg-[#E3000B] hover:text-white font-bold px-6 py-2.5 rounded-full text-sm transition-colors"
+              >
+                Delete review
+              </button>
+            )}
           </form>
         )}
 
         {/* Review Cards List */}
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-gray-100">
           {reviews.map((r) => (
             <div key={r._id} className="py-5 first:pt-0 last:pb-0">
               <div className="flex items-center gap-3 mb-1">
-                <span className="font-bold text-slate-900 text-base">
+                <span className="font-bold text-black text-base">
                   {r.user?.name || "Verified Customer"}
                 </span>
                 <span className="text-amber-400 text-xs font-bold">
                   {stars(r.rating)}
                 </span>
               </div>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-gray-600 text-sm leading-relaxed">
                 {r.comment}
               </p>
             </div>
           ))}
 
           {!reviews.length && (
-            <p className="text-slate-400 text-sm py-4 italic">
+            <p className="text-gray-400 text-sm py-4 italic">
               No reviews found matching criteria.
             </p>
           )}

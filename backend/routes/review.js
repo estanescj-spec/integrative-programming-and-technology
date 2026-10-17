@@ -12,6 +12,7 @@ const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth");
 router.get("/reviews/:productId", getProductReviews);
 router.post("/review", isAuthenticatedUser, createReview);
 router.put("/review/:id", isAuthenticatedUser, updateReview);
+router.delete("/review/:id", isAuthenticatedUser, deleteReview);
 router.delete(
   "/admin/review/:id",
   isAuthenticatedUser,

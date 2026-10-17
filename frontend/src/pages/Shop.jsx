@@ -40,7 +40,8 @@ export default function Shop() {
   useEffect(() => {
     api
       .get("/products/categories")
-      .then(({ data }) => setCategories(data.categories));
+      .then(({ data }) => setCategories(data.categories))
+      .catch((err) => console.error("Categories load failed:", err.message));
   }, []);
 
   useEffect(() => {
@@ -53,13 +54,17 @@ export default function Shop() {
       maxPrice: filters.maxPrice || undefined,
       minRating: filters.minRating || undefined,
       hasReviews: filters.hasReviews ? true : undefined,
+      deals: deals ? true : undefined,
     };
-    api.get("/products", { params: q }).then(({ data }) => {
-      setProducts(data.products);
-      setPages(data.pages);
-      setTotal(data.total);
-    });
-  }, [filters, page]);
+    api
+      .get("/products", { params: q })
+      .then(({ data }) => {
+        setProducts(data.products);
+        setPages(data.pages);
+        setTotal(data.total);
+      })
+      .catch((err) => console.error("Shop load failed:", err.message));
+  }, [filters, page, deals]);
 
   const set = (key, value) => {
     setPage(1);
@@ -159,8 +164,8 @@ export default function Shop() {
           <span className="text-[#E3000B]">({total})</span>
         </h1>
         <div className="flex mb-5 h-1.5 w-24 rounded-full overflow-hidden">
-          <div className="flex-1 bg-[#FFCC00]" />
-          <div className="flex-1 bg-[#00A651]" />
+          <div className="flex-1 bg-[#1D4ED8]" />
+          <div className="flex-1 bg-[#E3000B]" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {products.map((p) => (
