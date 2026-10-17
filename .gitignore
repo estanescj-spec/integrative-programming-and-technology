@@ -5,3 +5,6 @@ serviceAccountKey.json
 backend/config/.env
 backend/config/serviceAccountKey.json
 frontend/.env
+project-requirements.txt
+reference-project.zip
+ToyHaven-Functional-Requirements.pdf
