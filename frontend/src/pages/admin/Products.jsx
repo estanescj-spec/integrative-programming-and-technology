@@ -46,35 +46,47 @@ export default function AdminProducts() {
   const allOn = allIds.length && allIds.every((id) => selected.includes(id));
 
   const remove = async (id) => {
-    await api.delete(`/admin/product/${id}`);
-    toast.success("Deleted");
-    load();
+    if (!window.confirm("Delete this product?")) return;
+    try {
+      await api.delete(`/admin/product/${id}`);
+      toast.success("Deleted");
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   const bulk = async () => {
     if (!selected.length) return;
-    await api.post("/admin/products/bulk-delete", { ids: selected });
-    toast.success("Deleted selected");
-    load();
+    if (!window.confirm(`Delete ${selected.length} product(s)?`)) return;
+    try {
+      await api.post("/admin/products/bulk-delete", { ids: selected });
+      toast.success("Deleted selected");
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-2xl font-bold text-navy-900">Products</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="font-fredoka text-3xl font-semibold text-black">
+            Products
+          </h2>
+          <p className="text-sm text-gray-600">
             CRUD datatable with bulk delete
           </p>
         </div>
         <Link
           to="/admin/products/new"
-          className="bg-electric-600 text-white font-bold px-4 py-2 rounded-xl text-sm"
+          className="bg-[#E3000B] hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-full text-sm shadow-md transition-colors"
         >
-          Add product
+          + Add product
         </Link>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-200/70 card-shadow p-4">
+      <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-md p-4">
         <div className="flex flex-wrap gap-3 mb-4">
           <input
             value={q}
@@ -83,12 +95,12 @@ export default function AdminProducts() {
               setPage(1);
             }}
             placeholder="Search"
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm"
+            className="border border-gray-300 rounded-full px-3 py-2 text-sm"
           />
           <button
             onClick={bulk}
             disabled={!selected.length}
-            className="bg-red-50 text-red-600 font-bold px-4 py-2 rounded-xl text-sm disabled:opacity-40"
+            className="border-2 border-[#E3000B] text-[#E3000B] hover:bg-[#E3000B] hover:text-white font-bold px-5 py-2 rounded-full text-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#E3000B]"
           >
             Delete selected ({selected.length})
           </button>
@@ -96,7 +108,7 @@ export default function AdminProducts() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="text-xs uppercase text-slate-400">
+              <tr className="text-xs uppercase text-gray-500">
                 <th className="p-2">
                   <input
                     type="checkbox"
@@ -139,7 +151,7 @@ export default function AdminProducts() {
             </thead>
             <tbody>
               {rows.map((p) => (
-                <tr key={p._id} className="border-t border-slate-100">
+                <tr key={p._id} className="border-t border-gray-100">
                   <td className="p-2">
                     <input
                       type="checkbox"
@@ -147,15 +159,17 @@ export default function AdminProducts() {
                       onChange={() => toggle(p._id)}
                     />
                   </td>
-                  <td className="p-2 font-bold text-navy-900 flex items-center gap-2">
-                    {p.photos?.[0]?.url && (
-                      <img
-                        src={p.photos[0].url}
-                        alt=""
-                        className="w-10 h-10 rounded-lg object-cover"
-                      />
-                    )}
-                    {p.name}
+                  <td className="p-2">
+                    <div className="flex items-center gap-2 font-bold text-black">
+                      {p.photos?.[0]?.url && (
+                        <img
+                          src={p.photos[0].url}
+                          alt=""
+                          className="w-10 h-10 rounded-lg object-cover"
+                        />
+                      )}
+                      {p.name}
+                    </div>
                   </td>
                   <td className="p-2">{p.category}</td>
                   <td className="p-2">{peso(lowestPrice(p))}</td>
@@ -163,16 +177,16 @@ export default function AdminProducts() {
                     {p.variants.reduce((s, v) => s + v.stock, 0)}
                   </td>
                   <td className="p-2">{p.ratings}</td>
-                  <td className="p-2 text-right space-x-2">
+                  <td className="p-2 text-right whitespace-nowrap space-x-2">
                     <Link
                       to={`/admin/products/${p._id}`}
-                      className="text-electric-600 font-bold"
+                      className="inline-block border-2 border-[#1D4ED8] text-[#1D4ED8] hover:bg-[#1D4ED8] hover:text-white font-bold px-4 py-1 rounded-full text-xs transition-colors"
                     >
                       Edit
                     </Link>
                     <button
                       onClick={() => remove(p._id)}
-                      className="text-red-500 font-bold"
+                      className="border-2 border-[#E3000B] text-[#E3000B] hover:bg-[#E3000B] hover:text-white font-bold px-4 py-1 rounded-full text-xs transition-colors"
                     >
                       Delete
                     </button>
@@ -185,7 +199,7 @@ export default function AdminProducts() {
             <button
               disabled={safePage === 1}
               onClick={() => setPage(safePage - 1)}
-              className="px-3 py-1 rounded-lg border border-slate-200 disabled:opacity-40"
+              className="px-4 py-1.5 rounded-full border-2 border-gray-300 hover:border-black font-bold text-xs transition-colors disabled:opacity-40 disabled:hover:border-gray-300"
             >
               Prev
             </button>
@@ -195,7 +209,7 @@ export default function AdminProducts() {
             <button
               disabled={safePage === pages}
               onClick={() => setPage(safePage + 1)}
-              className="px-3 py-1 rounded-lg border border-slate-200 disabled:opacity-40"
+              className="px-4 py-1.5 rounded-full border-2 border-gray-300 hover:border-black font-bold text-xs transition-colors disabled:opacity-40 disabled:hover:border-gray-300"
             >
               Next
             </button>

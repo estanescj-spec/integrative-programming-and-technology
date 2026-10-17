@@ -26,6 +26,7 @@ exports.getProducts = async (req, res) => {
       maxPrice,
       minRating,
       hasReviews,
+      deals,
       page = 1,
       limit = 8,
     } = req.query;
