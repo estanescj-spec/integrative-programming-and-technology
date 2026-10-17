@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const User = require("../models/user");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
-
+const { uploadImage, destroyImage } = require("../utils/cloudinary");
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 
@@ -22,6 +22,10 @@ exports.googleLogin = async (req, res) => {
         isVerified: true,
         profilePhoto: { url: decoded.picture },
       });
+    }
+    if (!user.isVerified) {
+      user.isVerified = true;
+      await user.save();
     }
     if (user.isDeleted || !user.isActive)
       return res.status(403).json({ message: "Account unavailable" });
@@ -74,9 +78,7 @@ exports.verifyEmail = async (req, res) => {
       verifyTokenExpire: { $gt: Date.now() },
     });
     if (!user)
-      return res
-        .status(400)
-        .json({ message: "Invalid or expired verification link" });
+      return res.redirect(`${process.env.CLIENT_URL}/login?verified=false`);
 
     user.isVerified = true;
     user.verifyToken = undefined;
@@ -155,12 +157,21 @@ exports.getProfile = (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const User = require("../models/user");
-    const { uploadImage, destroyImage } = require("../utils/cloudinary");
-    const user = await User.findById(req.user._id);
-    const { name, email, password, photo } = req.body;
+    const user = await User.findById(req.user._id).select("+password");
+    const { name, email, password, photo, currentPassword } = req.body;
+
+    const emailChanged = email && email.trim().toLowerCase() !== user.email;
+    if (
+      (emailChanged || password) &&
+      !(await user.comparePassword(currentPassword || ""))
+    )
+      return res.status(400).json({ message: "Current password is incorrect" });
+
+    if (emailChanged && (await User.findOne({ email, _id: { $ne: user._id } })))
+      return res.status(400).json({ message: "Email already in use" });
+
     if (name) user.name = name;
-    if (email) user.email = email;
+    if (emailChanged) user.email = email;
     if (password) user.password = password;
     if (photo) {
       if (user.profilePhoto?.public_id)
@@ -171,6 +182,8 @@ exports.updateProfile = async (req, res) => {
     user.password = undefined;
     res.json({ success: true, user });
   } catch (err) {
+    if (err.code === 11000)
+      return res.status(400).json({ message: "Email already in use" });
     res.status(400).json({ message: err.message });
   }
 };

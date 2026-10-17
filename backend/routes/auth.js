@@ -11,14 +11,14 @@ const {
   resendVerification,
 } = require("../controllers/auth");
 const { isAuthenticatedUser } = require("../middlewares/auth");
-const { registerRules } = require("../middlewares/validate");
+const { registerRules, profileRules } = require("../middlewares/validate");
 
 router.post("/register", registerRules, registerUser);
 router.get("/verify/:token", verifyEmail);
 router.post("/login", loginUser);
 router.get("/logout", logout);
 router.get("/me", isAuthenticatedUser, getProfile);
-router.put("/me", isAuthenticatedUser, updateProfile);
+router.put("/me", isAuthenticatedUser, profileRules, updateProfile);
 router.post("/google-login", googleLogin);
 router.post("/resend-verification", resendVerification);
 
