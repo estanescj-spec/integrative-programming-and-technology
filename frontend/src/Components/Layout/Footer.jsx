@@ -1,24 +1,24 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../../api";
 
-const categories = [
-  "Lego Sets",
-  "RC Cars",
-  "Hot Wheels",
-  "Nerf Blasters",
-  "Puzzles",
-  "Plush Toys",
-];
+const hover = "hover:text-brand-500 transition-colors";
 
 export default function Footer() {
+  const [categories, setCategories] = useState([]);
+  useEffect(() => {
+    api
+      .get("/products/categories")
+      .then(({ data }) => setCategories(data.categories))
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="bg-white border-t border-gray-100 mt-auto">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
         <div>
-          <span
-            className="text-2xl font-bold tracking-tight text-black uppercase"
-            style={{ fontFamily: "'Fredoka','Nunito',sans-serif" }}
-          >
-            Toy Haven
+          <span className="text-2xl font-bold tracking-tight text-black uppercase">
+            ToyHaven
           </span>
           <p className="mt-3 text-sm text-gray-600 max-w-xs">
             Play, collect, and discover toys you love.
@@ -33,8 +33,8 @@ export default function Footer() {
             {categories.map((c) => (
               <li key={c}>
                 <Link
-                  to={`/shop?category=${encodeURIComponent(c)}`}
-                  className="hover:text-red-600 transition-colors"
+                  to={`/shop?categories=${encodeURIComponent(c)}`}
+                  className={hover}
                 >
                   {c}
                 </Link>
@@ -49,31 +49,22 @@ export default function Footer() {
           </h4>
           <ul className="space-y-2 text-sm text-gray-600">
             <li>
-              <Link
-                to="/login"
-                className="hover:text-red-600 transition-colors"
-              >
+              <Link to="/login" className={hover}>
                 Login
               </Link>
             </li>
             <li>
-              <Link
-                to="/register"
-                className="hover:text-red-600 transition-colors"
-              >
+              <Link to="/register" className={hover}>
                 Sign up
               </Link>
             </li>
             <li>
-              <Link
-                to="/orders"
-                className="hover:text-red-600 transition-colors"
-              >
+              <Link to="/orders" className={hover}>
                 My orders
               </Link>
             </li>
             <li>
-              <Link to="/cart" className="hover:text-red-600 transition-colors">
+              <Link to="/cart" className={hover}>
                 Cart
               </Link>
             </li>
@@ -92,7 +83,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-gray-100 py-5 text-center text-xs text-gray-500">
-        © 2026 Toy Haven. All rights reserved.
+        © 2026 ToyHaven. All rights reserved.
       </div>
     </footer>
   );

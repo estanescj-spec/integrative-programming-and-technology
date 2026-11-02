@@ -7,16 +7,13 @@ cloudinary.config({
 });
 
 const uploadImage = async (dataUri, folder = "toyhaven") => {
-  if (!process.env.CLOUDINARY_CLOUD_NAME) {
-    return { public_id: `local-${Date.now()}`, url: dataUri };
-  }
   const result = await cloudinary.uploader.upload(dataUri, { folder });
   return { public_id: result.public_id, url: result.secure_url };
 };
 
 const destroyImage = async (publicId) => {
-  if (!publicId || publicId.startsWith("local-") || !process.env.CLOUDINARY_CLOUD_NAME)
-    return;
+  if (!publicId) return;
+
   try {
     await cloudinary.uploader.destroy(publicId);
   } catch (err) {

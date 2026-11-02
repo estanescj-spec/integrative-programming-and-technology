@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../api";
-
-const input =
-  "border border-gray-300 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:border-[#E3000B] focus:ring-1 focus:ring-[#E3000B]";
+import { Button, TextField } from "@mui/material";
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -16,7 +14,7 @@ export default function AdminCategories() {
   };
 
   useEffect(() => {
-    load();
+    load().catch((err) => toast.error(err.message));
   }, []);
 
   const add = async (e) => {
@@ -63,34 +61,26 @@ export default function AdminCategories() {
 
   return (
     <div>
-      <h2 className="font-fredoka text-3xl font-semibold text-black tracking-tight mb-1">
-        Categories
-      </h2>
-      <div className="flex mb-5 h-1.5 w-24 rounded-full overflow-hidden">
-        <div className="flex-1 bg-[#1D4ED8]" />
-        <div className="flex-1 bg-[#E3000B]" />
-      </div>
-
       <form
         onSubmit={add}
         className="bg-white rounded-2xl border-2 border-gray-200 shadow-md p-4 mb-5 max-w-3xl flex flex-wrap gap-3"
       >
-        <input
+        <TextField
           required
+          fullWidth={false}
           placeholder="Category name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className={`${input} flex-1 min-w-40`}
+          sx={{ flex: 1, minWidth: 160 }}
         />
-        <input
+        <TextField
+          fullWidth={false}
           placeholder="Description (optional)"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className={`${input} flex-[2] min-w-48`}
+          sx={{ flex: 2, minWidth: 192 }}
         />
-        <button className="bg-[#E3000B] hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-full text-sm shadow-md">
-          Add category
-        </button>
+        <Button type="submit">Add category</Button>
       </form>
 
       <div className="space-y-3 max-w-3xl">
@@ -101,31 +91,32 @@ export default function AdminCategories() {
           >
             {editing?._id === c._id ? (
               <div className="space-y-2">
-                <input
+                <TextField
                   value={editing.name}
                   onChange={(e) =>
                     setEditing({ ...editing, name: e.target.value })
                   }
-                  className={`${input} w-full`}
                 />
-                <textarea
+                <TextField
+                  multiline
                   rows={2}
                   value={editing.description || ""}
                   onChange={(e) =>
                     setEditing({ ...editing, description: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#E3000B]"
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 4 } }}
                 />
-                <div className="space-x-4 text-sm font-bold">
-                  <button onClick={save} className="text-[#1D4ED8]">
+                <div className="flex gap-2">
+                  <Button size="small" onClick={save}>
                     Save
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
                     onClick={() => setEditing(null)}
-                    className="text-gray-500"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -141,16 +132,24 @@ export default function AdminCategories() {
                     {c.description || "No description"}
                   </p>
                 </div>
-                <div className="space-x-4 text-sm font-bold shrink-0">
-                  <button
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    size="small"
+                    variant="text"
+                    sx={{ px: 1.5 }}
                     onClick={() => setEditing({ ...c })}
-                    className="text-[#1D4ED8]"
                   >
                     Edit
-                  </button>
-                  <button onClick={() => remove(c)} className="text-[#E3000B]">
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="error"
+                    sx={{ px: 1.5 }}
+                    onClick={() => remove(c)}
+                  >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -6,16 +6,23 @@ import * as yup from "yup";
 import { toast } from "react-toastify";
 import api from "../../api";
 import { filesToDataUrls } from "../../utils";
+import { Button, Checkbox, FormControlLabel, TextField } from "@mui/material";
+
+const field = (register, name) => {
+  const { ref, ...rest } = register(name);
+  return { ...rest, inputRef: ref };
+};
 
 const schema = yup.object({
   name: yup.string().max(100).required("Name is required"),
-  description: yup.string().required("Description is required"),
-  category: yup.string().required("Category is required"),
+  description: yup.string(),
+  categories: yup.mixed(),
   variants: yup
     .array()
     .of(
       yup.object({
-        label: yup.string().required("Label is required"),
+        _id: yup.string(),
+        label: yup.string(),
         price: yup
           .number()
           .typeError("Enter a price")
@@ -33,11 +40,22 @@ const schema = yup.object({
           .integer("Whole numbers only")
           .min(0, "Stock can't be negative")
           .required("Enter stock"),
+        photoIndex: yup
+          .number()
+          .transform((v, o) => (o === "" || o == null ? undefined : v)),
       }),
     )
     .min(1, "Add at least one variant"),
   photos: yup.mixed(),
 });
+
+const emptyVariant = {
+  label: "",
+  price: "",
+  discountPercent: "",
+  stock: "",
+  photoIndex: "",
+};
 
 export default function ProductForm() {
   const { id } = useParams();
@@ -52,6 +70,7 @@ export default function ProductForm() {
     handleSubmit,
     reset,
     watch,
+    getValues,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm({
@@ -59,8 +78,8 @@ export default function ProductForm() {
     defaultValues: {
       name: "",
       description: "",
-      category: "",
-      variants: [{ label: "", price: "", discountPercent: "", stock: "" }],
+      categories: [],
+      variants: [emptyVariant],
     },
   });
 
@@ -69,36 +88,53 @@ export default function ProductForm() {
     name: "variants",
   });
   const files = watch("photos");
-  const previews = useMemo(
-    () => Array.from(files || []).map((f) => URL.createObjectURL(f)),
-    [files],
-  );
-  useEffect(
-    () => () => previews.forEach((u) => URL.revokeObjectURL(u)),
-    [previews],
-  );
+  const [previews, setPreviews] = useState([]);
+  useEffect(() => {
+    const urls = Array.from(files || []).map((f) => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [files]);
+  const shiftPhotoIndex = (pos) =>
+    (getValues("variants") || []).forEach((v, vi) => {
+      const n =
+        v.photoIndex === "" || v.photoIndex == null
+          ? null
+          : Number(v.photoIndex);
+      if (n === pos) setValue(`variants.${vi}.photoIndex`, "");
+      else if (n != null && n > pos)
+        setValue(`variants.${vi}.photoIndex`, n - 1);
+    });
   const removeNew = (index) => {
+    shiftPhotoIndex(visibleExisting.length + index);
     const dt = new DataTransfer();
     Array.from(files || []).forEach((f, i) => i !== index && dt.items.add(f));
     setValue("photos", dt.files);
   };
 
+  const visibleExisting = existingPhotos.filter(
+    (p) => !removePhotoIds.includes(p.public_id),
+  );
+  const photoOptions = [...visibleExisting.map((p) => p.url), ...previews];
+
   useEffect(() => {
     api
       .get("/products/categories")
-      .then(({ data }) => setCategories(data.categories));
+      .then(({ data }) => setCategories(data.categories))
+      .catch((err) => toast.error(err.message));
     if (id) {
       api.get(`/product/${id}`).then(({ data }) => {
         const p = data.product;
         reset({
           name: p.name,
           description: p.description,
-          category: p.category,
+          categories: p.categories || [],
           variants: p.variants.map((v) => ({
+            _id: v._id,
             label: v.label,
             price: v.price,
             discountPercent: v.discountPercent || 0,
             stock: v.stock,
+            photoIndex: v.photoIndex ?? "",
           })),
         });
         setExistingPhotos(p.photos || []);
@@ -114,7 +150,7 @@ export default function ProductForm() {
       const payload = {
         name: values.name,
         description: values.description,
-        category: values.category,
+        categories: [].concat(values.categories || []).filter(Boolean),
         variants: values.variants,
         photos,
         removePhotoIds,
@@ -141,106 +177,114 @@ export default function ProductForm() {
           <label className="text-xs font-bold uppercase text-gray-500">
             Name
           </label>
-          <input
-            {...register("name")}
-            className="mt-1 w-full border border-gray-300 rounded-full px-3 py-2"
+          <TextField
+            {...field(register, "name")}
+            error={!!errors.name}
+            helperText={errors.name?.message}
+            sx={{ mt: 0.5 }}
           />
-          {errors.name && (
-            <p className="text-[#E3000B] text-xs">{errors.name.message}</p>
-          )}
         </div>
         <div>
           <label className="text-xs font-bold uppercase text-gray-500">
             Description
           </label>
-          <textarea
-            {...register("description")}
+          <TextField
+            multiline
             rows={4}
-            className="mt-1 w-full border border-gray-300 rounded-2xl px-3 py-2"
+            {...field(register, "description")}
           />
-          {errors.description && (
-            <p className="text-[#E3000B] text-xs">
-              {errors.description.message}
-            </p>
-          )}
         </div>
         <div>
           <label className="text-xs font-bold uppercase text-gray-500">
-            Category
+            Categories
           </label>
-          <select
-            {...register("category")}
-            className="mt-1 w-full border border-gray-300 rounded-full px-3 py-2"
-          >
-            <option value="">Select category</option>
+          <div className="mt-1 flex flex-wrap gap-x-2">
             {categories.map((c) => (
-              <option key={c}>{c}</option>
+              <FormControlLabel
+                key={c}
+                label={c}
+                control={
+                  <Checkbox
+                    size="small"
+                    value={c}
+                    {...field(register, "categories")}
+                  />
+                }
+              />
             ))}
-          </select>
-          {errors.category && (
-            <p className="text-[#E3000B] text-xs">{errors.category.message}</p>
-          )}
+          </div>
         </div>
         <div>
           <div className="flex justify-between items-center">
             <label className="text-xs font-bold uppercase text-gray-500">
               Variants
             </label>
-            <button
+            <Button
+              size="small"
+              variant="text"
               type="button"
-              onClick={() =>
-                append({ label: "", price: "", discountPercent: "", stock: "" })
-              }
-              className="text-xs font-bold text-[#1D4ED8]"
+              onClick={() => append(emptyVariant)}
             >
               Add variant
-            </button>
+            </Button>
           </div>
 
-          <div className="hidden md:grid grid-cols-5 gap-2 mt-2 text-[11px] font-bold uppercase text-gray-500">
+          <div className="hidden md:grid grid-cols-6 gap-2 mt-2 text-[11px] font-bold uppercase text-gray-500">
             <span>Option</span>
             <span>Price (₱)</span>
             <span>Discount %</span>
             <span>Stock</span>
+            <span>Photo</span>
             <span />
           </div>
 
-          {fields.map((field, i) => (
-            <div key={field.id}>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
-                <input
-                  placeholder="e.g. Red, Large, Deluxe Edition"
-                  {...register(`variants.${i}.label`)}
-                  className="border border-gray-300 rounded-full px-2 py-2 text-sm"
+          {fields.map((f, i) => (
+            <div key={f.id}>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
+                <TextField
+                  placeholder="Default (if empty)"
+                  {...field(register, `variants.${i}.label`)}
                 />
-                <input
+                <TextField
                   type="number"
                   placeholder="Price"
-                  {...register(`variants.${i}.price`)}
-                  className="border border-gray-300 rounded-full px-2 py-2 text-sm"
+                  {...field(register, `variants.${i}.price`)}
                 />
-                <input
+                <TextField
                   type="number"
                   placeholder="0-100"
-                  {...register(`variants.${i}.discountPercent`)}
-                  className="border border-gray-300 rounded-full px-2 py-2 text-sm"
+                  {...field(register, `variants.${i}.discountPercent`)}
                 />
-                <input
+                <TextField
                   type="number"
                   placeholder="Stock"
-                  {...register(`variants.${i}.stock`)}
-                  className="border border-gray-300 rounded-full px-2 py-2 text-sm"
+                  {...field(register, `variants.${i}.stock`)}
                 />
-                <button
+                <TextField
+                  select
+                  slotProps={{ select: { native: true } }}
+                  {...field(register, `variants.${i}.photoIndex`)}
+                >
+                  <option value="">No photo</option>
+                  {photoOptions.map((_, n) => (
+                    <option key={n} value={n}>
+                      Photo {n + 1}
+                    </option>
+                  ))}
+                </TextField>
+                <Button
                   type="button"
+                  size="small"
+                  variant="text"
+                  color="error"
                   onClick={() => remove(i)}
-                  className="text-[#E3000B] text-xs font-bold"
+                  disabled={fields.length === 1}
                 >
                   Remove
-                </button>
+                </Button>
               </div>
               {errors.variants?.[i] && (
-                <p className="text-[#E3000B] text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1">
                   {
                     Object.values(errors.variants[i])
                       .map((e) => e?.message)
@@ -252,26 +296,50 @@ export default function ProductForm() {
           ))}
 
           {errors.variants?.message && (
-            <p className="text-[#E3000B] text-xs">{errors.variants.message}</p>
+            <p className="text-red-500 text-xs">{errors.variants.message}</p>
           )}
         </div>
         <div>
           <p className="text-xs font-bold uppercase text-gray-500">Photos</p>
-          <label className="mt-2 inline-block cursor-pointer bg-[#1D4ED8] hover:bg-blue-800 text-white text-xs font-extrabold tracking-widest uppercase rounded-xl px-5 py-2.5">
+          <Button component="label" variant="outlined" sx={{ mt: 1 }}>
             Choose photos
             <input
               type="file"
               accept="image/*"
               multiple
+              hidden
               {...register("photos")}
-              className="hidden"
             />
-          </label>
+          </Button>
           <p className="text-xs text-gray-500 mt-1">
             {files?.length
               ? `${files.length} file(s) selected`
               : "No files chosen"}
           </p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {visibleExisting.map((p, i) => (
+              <div key={p.public_id} className="relative">
+                <img
+                  src={p.url}
+                  alt=""
+                  className="w-16 h-16 rounded-xl object-cover"
+                />
+                <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] font-bold px-1.5 rounded-full">
+                  {i + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    shiftPhotoIndex(i);
+                    setRemovePhotoIds((ids) => [...ids, p.public_id]);
+                  }}
+                  className="absolute -top-1 -right-1 bg-brand-500 text-white w-5 h-5 rounded-full text-xs"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
           {previews.length > 0 && (
             <div className="flex gap-2 mt-3 flex-wrap">
               {previews.map((src, i) => (
@@ -279,12 +347,15 @@ export default function ProductForm() {
                   <img
                     src={src}
                     alt=""
-                    className="w-16 h-16 rounded-xl object-cover border-2 border-[#1D4ED8]"
+                    className="w-16 h-16 rounded-xl object-cover border-2 border-ink"
                   />
+                  <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] font-bold px-1.5 rounded-full">
+                    {visibleExisting.length + i + 1}
+                  </span>
                   <button
                     type="button"
                     onClick={() => removeNew(i)}
-                    className="absolute -top-1 -right-1 bg-[#1D4ED8] text-white w-5 h-5 rounded-full text-xs"
+                    className="absolute -top-1 -right-1 bg-ink text-white w-5 h-5 rounded-full text-xs"
                   >
                     ×
                   </button>
@@ -292,43 +363,19 @@ export default function ProductForm() {
               ))}
             </div>
           )}
-          <div className="flex gap-2 mt-3 flex-wrap">
-            {existingPhotos
-              .filter((p) => !removePhotoIds.includes(p.public_id))
-              .map((p) => (
-                <div key={p.public_id} className="relative">
-                  <img
-                    src={p.url}
-                    alt=""
-                    className="w-16 h-16 rounded-xl object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setRemovePhotoIds((ids) => [...ids, p.public_id])
-                    }
-                    className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-          </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            disabled={isSubmitting}
-            className="bg-[#E3000B] text-white font-bold px-6 py-3 rounded-full"
-          >
+          <Button type="submit" size="large" disabled={isSubmitting}>
             {isSubmitting ? "Saving..." : "Save product"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="large"
+            variant="outlined"
             onClick={() => navigate("/admin/products")}
-            className="border-2 border-gray-300 hover:border-black text-gray-700 font-bold px-6 py-3 rounded-full transition-colors"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
     </div>

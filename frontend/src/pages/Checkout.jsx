@@ -1,37 +1,60 @@
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
 import api from "../api";
-import { useCart } from "../context/CartContext";
-import { peso } from "../utils";
+import { useCart } from "../hooks";
+import { discountedPrice, peso, variantOf } from "../utils";
+import { Controller, useForm } from "react-hook-form";
+import { Button, MenuItem, Select, TextField } from "@mui/material";
+
+const field = (register, name) => {
+  const { ref, ...rest } = register(name);
+  return { ...rest, inputRef: ref };
+};
 
 const schema = yup.object({
-  address: yup.string().required("Address is required"),
-  city: yup.string().required("City is required"),
-  phoneNo: yup.string().required("Phone is required"),
-  postalCode: yup.string().required("Postal code is required"),
-  country: yup.string().required("Country is required"),
-  paymentMethod: yup.string().required(),
+  address: yup.string().trim().required("Address is required"),
+  phoneNo: yup
+    .string()
+    .matches(/^[0-9+\-\s]{7,15}$/, "Enter a valid phone number")
+    .required("Phone is required"),
+  paymentMethod: yup.string(),
 });
 
+const fields = [
+  ["address", "Address"],
+  ["phoneNo", "Phone number"],
+];
+
+const label =
+  "text-[11px] font-extrabold tracking-widest text-gray-800 uppercase";
+
 export default function Checkout() {
-  const { subtotal, refresh, cart } = useCart();
+  const { refresh, selectedItems, selectedSubtotal } = useCart();
   const navigate = useNavigate();
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
-    defaultValues: { country: "Philippines", paymentMethod: "Cash on Delivery" },
+    defaultValues: { paymentMethod: "Cash on Delivery" },
   });
 
   const onSubmit = async (values) => {
     try {
       const { paymentMethod, ...shippingInfo } = values;
-      const { data } = await api.post("/order", { shippingInfo, paymentMethod });
+      const items = selectedItems.map((i) => ({
+        productId: i.product._id,
+        variant: i.variant,
+      }));
+      const { data } = await api.post("/order", {
+        shippingInfo,
+        paymentMethod,
+        items,
+      });
       await refresh();
       toast.success("Order placed");
       navigate(`/orders/${data.order._id}`);
@@ -40,46 +63,97 @@ export default function Checkout() {
     }
   };
 
-  if (!cart.items?.length) {
-    return <p className="p-10 text-center text-slate-500">Your cart is empty.</p>;
+  if (!selectedItems.length) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center">
+        <p className="text-gray-600 font-semibold">
+          No items selected for checkout.
+        </p>
+        <Button component={Link} to="/cart" sx={{ mt: 2 }}>
+          Back to cart
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-extrabold text-navy-900 mb-6">Checkout</h1>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-white rounded-2xl border border-slate-200/70 card-shadow p-6 space-y-4"
-      >
-        {["address", "city", "phoneNo", "postalCode", "country"].map((name) => (
-          <div key={name}>
-            <label className="text-xs font-bold uppercase text-slate-400">{name}</label>
-            <input
-              {...register(name)}
-              className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
-            />
-            {errors[name] && <p className="text-red-500 text-xs">{errors[name].message}</p>}
-          </div>
-        ))}
-        <div>
-          <label className="text-xs font-bold uppercase text-slate-400">Payment</label>
-          <select
-            {...register("paymentMethod")}
-            className="mt-1 w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm"
-          >
-            <option>Cash on Delivery</option>
-            <option>Card</option>
-            <option>GCash</option>
-          </select>
-        </div>
-        <p className="text-lg font-black">Total {peso(subtotal)}</p>
-        <button
-          disabled={isSubmitting}
-          className="w-full bg-electric-600 text-white font-bold py-3 rounded-xl"
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <h1 className="font-fredoka text-4xl font-semibold tracking-tight text-black mb-1">
+        <span className="text-brand-500">Check</span>out
+      </h1>
+      <div className="flex mb-6 h-1.5 w-24 rounded-full overflow-hidden">
+        <div className="flex-1 bg-ink" />
+        <div className="flex-1 bg-brand-500" />
+      </div>
+
+      <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4"
         >
-          Place order
-        </button>
-      </form>
+          {fields.map(([name, text]) => (
+            <div key={name}>
+              <label className={label}>{text}</label>
+              <TextField
+                {...field(register, name)}
+                error={!!errors[name]}
+                helperText={errors[name]?.message}
+                sx={{ mt: 0.5 }}
+              />
+            </div>
+          ))}
+          <div>
+            <label className={label}>Payment</label>
+            <Controller
+              name="paymentMethod"
+              control={control}
+              render={({ field: f }) => (
+                <Select {...f} fullWidth sx={{ mt: 0.5 }}>
+                  <MenuItem value="Cash on Delivery">Cash on Delivery</MenuItem>
+                  <MenuItem value="Card">Card</MenuItem>
+                  <MenuItem value="GCash">GCash</MenuItem>
+                </Select>
+              )}
+            />
+          </div>
+          <Button type="submit" fullWidth size="large" disabled={isSubmitting}>
+            {isSubmitting
+              ? "Placing order..."
+              : `Place order · ${peso(selectedSubtotal)}`}
+          </Button>
+          <Button component={Link} to="/cart" sx={{ mt: 2 }}>
+            Back to cart
+          </Button>
+        </form>
+
+        <aside className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 h-fit">
+          <p className={label}>Order summary</p>
+          <div className="divide-y divide-gray-100 mt-2">
+            {selectedItems.map((i) => {
+              const v = variantOf(i);
+              return (
+                <div
+                  key={`${i.product._id}-${i.variant}`}
+                  className="py-2 flex justify-between gap-3 text-sm"
+                >
+                  <span className="text-gray-700">
+                    {i.product.name}{" "}
+                    <span className="text-gray-500">
+                      ({i.variant}) × {i.quantity}
+                    </span>
+                  </span>
+                  <span className="font-bold whitespace-nowrap">
+                    {peso(discountedPrice(v) * i.quantity)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="font-fredoka text-2xl font-semibold text-black mt-3">
+            Total {peso(selectedSubtotal)}
+          </p>
+        </aside>
+      </div>
     </div>
   );
 }

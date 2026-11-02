@@ -10,8 +10,16 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import api from "../../api";
-import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-toastify";
+import { useAuth } from "../../hooks";
 import { peso } from "../../utils";
+import {
+  Avatar,
+  LinearProgress,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 
 ChartJS.register(
   CategoryScale,
@@ -27,34 +35,30 @@ const metrics = [
     key: "totalSales",
     label: "Total Sales (Delivered)",
     icon: "fa-truck-ramp-box",
-    color: "blue",
   },
   {
     key: "totalOrders",
     label: "Total Orders",
     icon: "fa-bag-shopping",
-    color: "red",
   },
-  { key: "totalUsers", label: "Total Users", icon: "fa-users", color: "blue" },
+  { key: "totalUsers", label: "Total Users", icon: "fa-users" },
   {
     key: "totalProducts",
     label: "Total Products",
     icon: "fa-cubes",
-    color: "red",
   },
 ];
 
-const iconWrap = {
-  blue: "bg-blue-50 text-[#1D4ED8]",
-  red: "bg-red-50 text-[#E3000B]",
-};
-
 export default function Dashboard() {
+  const brand =
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--color-brand-500")
+      .trim() || "#0059ff";
   const { user } = useAuth();
-  const today = new Date().toISOString().slice(0, 10);
-  const monthAgo = new Date(Date.now() - 29 * 86400000)
-    .toISOString()
-    .slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA");
+  const monthAgo = new Date(Date.now() - 29 * 86400000).toLocaleDateString(
+    "en-CA",
+  );
   const [from, setFrom] = useState(monthAgo);
   const [to, setTo] = useState(today);
   const [dash, setDash] = useState(null);
@@ -63,7 +67,8 @@ export default function Dashboard() {
   useEffect(() => {
     api
       .get("/admin/dashboard", { params: { from, to } })
-      .then(({ data }) => setDash(data));
+      .then(({ data }) => setDash(data))
+      .catch((err) => toast.error(err.message));
   }, [from, to]);
 
   const chartData = useMemo(() => {
@@ -75,17 +80,17 @@ export default function Dashboard() {
         {
           label: "Sales (₱)",
           data,
-          borderColor: "#1D4ED8",
+          borderColor: brand,
           borderWidth: 3,
           backgroundColor: (ctx) => {
             const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 320);
-            g.addColorStop(0, "rgba(29, 78, 216, 0.30)");
-            g.addColorStop(1, "rgba(29, 78, 216, 0.0)");
+            g.addColorStop(0, brand + "40");
+            g.addColorStop(1, brand + "00");
             return g;
           },
           fill: true,
           tension: 0.38,
-          pointBackgroundColor: "#1D4ED8",
+          pointBackgroundColor: brand,
           pointBorderColor: "#FFFFFF",
           pointBorderWidth: 2,
           pointRadius: 5,
@@ -101,8 +106,8 @@ export default function Dashboard() {
       legend: { display: false },
       tooltip: {
         backgroundColor: "#000000",
-        titleFont: { family: "Nunito", size: 13, weight: "bold" },
-        bodyFont: { family: "Nunito", size: 12 },
+        titleFont: { family: "Inter", size: 13, weight: "bold" },
+        bodyFont: { family: "Inter", size: 12 },
         padding: 12,
         cornerRadius: 10,
         displayColors: false,
@@ -116,20 +121,22 @@ export default function Dashboard() {
       x: {
         grid: { display: false },
         ticks: {
-          font: { family: "Nunito", size: 11, weight: "600" },
+          font: { family: "Inter", size: 11, weight: "600" },
           color: "#64748B",
         },
       },
       y: {
         grid: { color: "#F1F5F9" },
         ticks: {
-          font: { family: "Nunito", size: 11, weight: "600" },
+          font: { family: "Inter", size: 11, weight: "600" },
           color: "#64748B",
           callback: (value) =>
             "₱" +
             (value >= 1000000
               ? (value / 1000000).toFixed(1) + "M"
-              : value / 1000 + "K"),
+              : value >= 1000
+                ? +(value / 1000).toFixed(1) + "K"
+                : value),
         },
       },
     },
@@ -148,29 +155,21 @@ export default function Dashboard() {
             Here's what's happening with your store.
           </p>
         </div>
-        <div className="relative">
-          <div className="w-11 h-11 rounded-full bg-[#E3000B] text-white font-bold flex items-center justify-center ring-2 ring-red-200">
-            {(user?.name || "A")[0]}
-          </div>
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white" />
-        </div>
       </header>
 
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
         {metrics.map((m) => (
           <div
             key={m.key}
-            className="bg-white p-5 rounded-2xl border-2 border-gray-200 shadow-md hover:border-gray-400 transition-all"
+            className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:border-gray-400 transition-all"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-600">
                 {m.label}
               </span>
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${iconWrap[m.color]}`}
-              >
-                <i className={`fa-solid ${m.icon} text-lg`} />
-              </div>
+              <Avatar sx={{ bgcolor: "primary.light", color: "primary.main" }}>
+                <i className={`fa-solid ${m.icon}`} />
+              </Avatar>
             </div>
             <h3 className="text-2xl font-bold text-black tracking-tight">
               {m.key === "totalSales"
@@ -182,7 +181,7 @@ export default function Dashboard() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border-2 border-gray-200 shadow-md flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <h3 className="font-fredoka text-xl font-semibold text-black tracking-tight">
@@ -193,28 +192,22 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-full">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  From:
-                </label>
-                <input
-                  type="date"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-gray-700 focus:outline-none"
-                />
-              </div>
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-full">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  To:
-                </label>
-                <input
-                  type="date"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-gray-700 focus:outline-none"
-                />
-              </div>
+              <TextField
+                type="date"
+                label="From"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: 170 }}
+              />
+              <TextField
+                type="date"
+                label="To"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: 170 }}
+              />
             </div>
           </div>
           <div className="relative flex-1 min-h-[300px] w-full pt-2">
@@ -222,25 +215,28 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border-2 border-gray-200 shadow-md">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
           <h3 className="font-fredoka text-xl font-semibold text-black tracking-tight mb-3">
             Top Breakdowns
           </h3>
-          <div className="flex bg-slate-100 p-1 rounded-full mb-3 border border-slate-200/60">
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size="small"
+            value={tab}
+            onChange={(_, v) => v && setTab(v)}
+            sx={{ mb: 1.5 }}
+          >
             {["product", "category", "user"].map((t) => (
-              <button
+              <ToggleButton
                 key={t}
-                onClick={() => setTab(t)}
-                className={`flex-1 py-1 text-xs font-extrabold rounded-full capitalize ${
-                  tab === t
-                    ? "text-white bg-[#E3000B] shadow-sm"
-                    : "text-gray-600"
-                }`}
+                value={t}
+                sx={{ textTransform: "capitalize", fontWeight: 700 }}
               >
                 {t}
-              </button>
+              </ToggleButton>
             ))}
-          </div>
+          </ToggleButtonGroup>
           <div className="space-y-2.5">
             {items.map((item) => (
               <div key={item.name} className="py-1 space-y-1">
@@ -257,12 +253,11 @@ export default function Dashboard() {
                     </span>
                   </div>
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#E3000B] rounded-full"
-                    style={{ width: `${item.percent}%` }}
-                  />
-                </div>
+                <LinearProgress
+                  variant="determinate"
+                  value={Number(item.percent)}
+                  sx={{ height: 8, borderRadius: 4, bgcolor: "action.hover" }}
+                />
               </div>
             ))}
             {!items.length && (

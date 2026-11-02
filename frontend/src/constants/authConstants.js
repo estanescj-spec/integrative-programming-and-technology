@@ -1,0 +1,5 @@
+export const LOAD_USER_SUCCESS = "LOAD_USER_SUCCESS";
+export const LOAD_USER_FAIL = "LOAD_USER_FAIL";
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
+export const LOGOUT_SUCCESS = "LOGOUT_SUCCESS";
+export const SET_USER = "SET_USER";

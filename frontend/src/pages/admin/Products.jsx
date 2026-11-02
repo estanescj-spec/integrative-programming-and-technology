@@ -3,6 +3,20 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../api";
 import { lowestPrice, peso } from "../../utils";
+import {
+  Avatar,
+  Button,
+  Checkbox,
+  Pagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableSortLabel,
+  TextField,
+} from "@mui/material";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -21,18 +35,24 @@ export default function AdminProducts() {
   };
 
   useEffect(() => {
-    load();
+    load().catch((err) => toast.error(err.message));
   }, []);
 
   const val = (p) =>
-    sort.key === "price"
-      ? lowestPrice(p)
-      : sort.key === "stock"
-        ? p.variants.reduce((s, v) => s + v.stock, 0)
-        : p[sort.key];
+    sort.key === "categories"
+      ? (p.categories || []).join(", ")
+      : sort.key === "price"
+        ? lowestPrice(p)
+        : sort.key === "stock"
+          ? p.variants.reduce((s, v) => s + v.stock, 0)
+          : p[sort.key];
   const filtered = products
     .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
-    .sort((a, b) => (val(a) > val(b) ? 1 : -1) * sort.dir);
+    .sort((a, b) => {
+      const x = val(a);
+      const y = val(b);
+      return (typeof x === "string" ? x.localeCompare(y) : x - y) * sort.dir;
+    });
   const pages = Math.max(1, Math.ceil(filtered.length / PER));
   const safePage = Math.min(page, pages);
   const rows = filtered.slice((safePage - 1) * PER, safePage * PER);
@@ -70,150 +90,129 @@ export default function AdminProducts() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="font-fredoka text-3xl font-semibold text-black">
-            Products
-          </h2>
-          <p className="text-sm text-gray-600">
-            CRUD datatable with bulk delete
-          </p>
-        </div>
-        <Link
-          to="/admin/products/new"
-          className="bg-[#E3000B] hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-full text-sm shadow-md transition-colors"
-        >
+      <div className="flex justify-end mb-5">
+        <Button component={Link} to="/admin/products/new">
           + Add product
-        </Link>
+        </Button>
       </div>
-      <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-md p-4">
+
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
         <div className="flex flex-wrap gap-3 mb-4">
-          <input
+          <TextField
+            fullWidth={false}
             value={q}
             onChange={(e) => {
               setQ(e.target.value);
               setPage(1);
             }}
             placeholder="Search"
-            className="border border-gray-300 rounded-full px-3 py-2 text-sm"
+            sx={{ width: 260 }}
           />
-          <button
+          <Button
+            color="error"
             onClick={bulk}
             disabled={!selected.length}
-            className="border-2 border-[#E3000B] text-[#E3000B] hover:bg-[#E3000B] hover:text-white font-bold px-5 py-2 rounded-full text-sm transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#E3000B]"
           >
             Delete selected ({selected.length})
-          </button>
+          </Button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="text-xs uppercase text-gray-500">
-                <th className="p-2">
-                  <input
-                    type="checkbox"
+
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    size="small"
                     checked={!!allOn}
+                    indeterminate={!allOn && selected.length > 0}
                     onChange={() => setSelected(allOn ? [] : allIds)}
                   />
-                </th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => sortBy("name")}
-                >
-                  Product
-                </th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => sortBy("category")}
-                >
-                  Category
-                </th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => sortBy("price")}
-                >
-                  Price
-                </th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => sortBy("stock")}
-                >
-                  Stock
-                </th>
-                <th
-                  className="p-2 cursor-pointer"
-                  onClick={() => sortBy("ratings")}
-                >
-                  Rating
-                </th>
-                <th className="p-2" />
-              </tr>
-            </thead>
-            <tbody>
+                </TableCell>
+                {[
+                  ["name", "Product"],
+                  ["categories", "Categories"],
+                  ["price", "Price"],
+                  ["stock", "Stock"],
+                  ["ratings", "Rating"],
+                ].map(([k, l]) => (
+                  <TableCell key={k}>
+                    <TableSortLabel
+                      active={sort.key === k}
+                      direction={sort.dir === 1 ? "asc" : "desc"}
+                      onClick={() => sortBy(k)}
+                    >
+                      {l}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+                <TableCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {rows.map((p) => (
-                <tr key={p._id} className="border-t border-gray-100">
-                  <td className="p-2">
-                    <input
-                      type="checkbox"
+                <TableRow key={p._id} hover>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      size="small"
                       checked={selected.includes(p._id)}
                       onChange={() => toggle(p._id)}
                     />
-                  </td>
-                  <td className="p-2">
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2 font-bold text-black">
-                      {p.photos?.[0]?.url && (
-                        <img
-                          src={p.photos[0].url}
-                          alt=""
-                          className="w-10 h-10 rounded-lg object-cover"
-                        />
-                      )}
+                      <Avatar
+                        variant="rounded"
+                        src={p.photos?.[0]?.url}
+                        sx={{ width: 40, height: 40 }}
+                      />
                       {p.name}
                     </div>
-                  </td>
-                  <td className="p-2">{p.category}</td>
-                  <td className="p-2">{peso(lowestPrice(p))}</td>
-                  <td className="p-2">
+                  </TableCell>
+                  <TableCell>{(p.categories || []).join(", ")}</TableCell>
+                  <TableCell>{peso(lowestPrice(p))}</TableCell>
+                  <TableCell>
                     {p.variants.reduce((s, v) => s + v.stock, 0)}
-                  </td>
-                  <td className="p-2">{p.ratings}</td>
-                  <td className="p-2 text-right whitespace-nowrap space-x-2">
-                    <Link
+                  </TableCell>
+                  <TableCell>{p.ratings}</TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                    <Button
+                      component={Link}
                       to={`/admin/products/${p._id}`}
-                      className="inline-block border-2 border-[#1D4ED8] text-[#1D4ED8] hover:bg-[#1D4ED8] hover:text-white font-bold px-4 py-1 rounded-full text-xs transition-colors"
+                      size="small"
+                      variant="outlined"
                     >
                       Edit
-                    </Link>
-                    <button
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="text"
+                      color="error"
                       onClick={() => remove(p._id)}
-                      className="border-2 border-[#E3000B] text-[#E3000B] hover:bg-[#E3000B] hover:text-white font-bold px-4 py-1 rounded-full text-xs transition-colors"
+                      sx={{ ml: 1 }}
                     >
                       Delete
-                    </button>
-                  </td>
-                </tr>
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-          <div className="flex justify-end items-center gap-3 mt-3 text-sm">
-            <button
-              disabled={safePage === 1}
-              onClick={() => setPage(safePage - 1)}
-              className="px-4 py-1.5 rounded-full border-2 border-gray-300 hover:border-black font-bold text-xs transition-colors disabled:opacity-40 disabled:hover:border-gray-300"
-            >
-              Prev
-            </button>
-            <span>
-              {safePage} / {pages}
-            </span>
-            <button
-              disabled={safePage === pages}
-              onClick={() => setPage(safePage + 1)}
-              className="px-4 py-1.5 rounded-full border-2 border-gray-300 hover:border-black font-bold text-xs transition-colors disabled:opacity-40 disabled:hover:border-gray-300"
-            >
-              Next
-            </button>
-          </div>
+              {!rows.length && (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    No products found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <div className="flex justify-end mt-3">
+          <Pagination
+            count={pages}
+            page={safePage}
+            onChange={(_, n) => setPage(n)}
+          />
         </div>
       </div>
     </div>

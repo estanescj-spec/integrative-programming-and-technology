@@ -23,6 +23,7 @@ exports.getProductReviews = async (req, res) => {
     const { minRating } = req.query;
     const q = { product: req.params.productId };
     if (minRating) q.rating = { $gte: Number(minRating) };
+
     const reviews = await Review.find(q)
       .populate("user", "name profilePhoto")
       .sort({ createdAt: -1 });
@@ -75,7 +76,8 @@ exports.updateReview = async (req, res) => {
     if (review.user.toString() !== req.user._id.toString())
       return res.status(403).json({ message: "Not allowed" });
     if (req.body.rating) review.rating = req.body.rating;
-    if (req.body.comment) review.comment = filter.clean(req.body.comment);
+    if (req.body.comment !== undefined)
+      review.comment = filter.clean(req.body.comment);
     await review.save();
     await recalcRatings(review.product);
     res.json({ success: true, review });
@@ -93,6 +95,7 @@ exports.deleteReview = async (req, res) => {
       req.user.role !== "admin"
     )
       return res.status(403).json({ message: "Not allowed" });
+
     const productId = review.product;
     await review.deleteOne();
     await recalcRatings(productId);

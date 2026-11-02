@@ -1,8 +1,23 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../../api";
+import { useAuth } from "../../hooks";
+import {
+  Avatar,
+  Button,
+  MenuItem,
+  Select,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 export default function AdminUsers() {
+  const { user: me } = useAuth();
   const [users, setUsers] = useState([]);
 
   const load = async () => {
@@ -11,7 +26,7 @@ export default function AdminUsers() {
   };
 
   useEffect(() => {
-    load();
+    load().catch((err) => toast.error(err.message));
   }, []);
 
   const patch = async (id, body) => {
@@ -23,58 +38,82 @@ export default function AdminUsers() {
     }
   };
 
-  const remove = async (id) => {
-    await api.delete(`/admin/user/${id}`);
-    toast.success("User deleted");
-    load();
+  const remove = async (u) => {
+    if (!window.confirm(`Delete ${u.name}?`)) return;
+    try {
+      await api.delete(`/admin/user/${u._id}`);
+      toast.success("User deleted");
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    }
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-navy-900 mb-5">Users</h2>
-      <div className="bg-white rounded-2xl border border-slate-200/70 card-shadow overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr className="text-xs uppercase text-slate-400">
-              <th className="p-3">Name</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Role</th>
-              <th className="p-3">Active</th>
-              <th className="p-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u._id} className="border-t border-slate-100">
-                <td className="p-3 font-bold">{u.name}</td>
-                <td className="p-3">{u.email}</td>
-                <td className="p-3">
-                  <select
-                    value={u.role}
-                    onChange={(e) => patch(u._id, { role: e.target.value })}
-                    className="border border-slate-200 rounded-xl px-2 py-1"
+    <TableContainer className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Email</TableCell>
+            <TableCell>Role</TableCell>
+            <TableCell>Active</TableCell>
+            <TableCell />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {users.map((u) => (
+            <TableRow key={u._id} hover>
+              <TableCell>
+                <div className="flex items-center gap-2 font-bold text-black">
+                  <Avatar
+                    src={u.profilePhoto?.url}
+                    sx={{ width: 32, height: 32, fontSize: 14 }}
                   >
-                    <option>customer</option>
-                    <option>admin</option>
-                  </select>
-                </td>
-                <td className="p-3">
-                  <input
-                    type="checkbox"
-                    checked={u.isActive}
-                    onChange={(e) => patch(u._id, { isActive: e.target.checked })}
-                  />
-                </td>
-                <td className="p-3">
-                  <button onClick={() => remove(u._id)} className="text-red-500 font-bold">
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                    {(u.name || "?")[0].toUpperCase()}
+                  </Avatar>
+                  {u.name}
+                </div>
+              </TableCell>
+              <TableCell>{u.email}</TableCell>
+              <TableCell>
+                <Select
+                  fullWidth={false}
+                  value={u.role} disabled={u._id === me._id}
+                  onChange={(e) => patch(u._id, { role: e.target.value })}
+                  sx={{ minWidth: 120, fontSize: 13 }}
+                >
+                  <MenuItem value="customer">customer</MenuItem>
+                  <MenuItem value="admin">admin</MenuItem>
+                </Select>
+              </TableCell>
+              <TableCell>
+                <Switch
+                  checked={u.isActive} disabled={u._id === me._id}
+                  onChange={(e) => patch(u._id, { isActive: e.target.checked })}
+                />
+              </TableCell>
+              <TableCell align="right">
+                <Button
+                  size="small"
+                  variant="text"
+                  color="error"
+                  onClick={() => remove(u)} disabled={u._id === me._id}
+                >
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {!users.length && (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                No users found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

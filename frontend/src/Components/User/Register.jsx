@@ -5,6 +5,12 @@ import * as yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../api";
+import { Button, InputAdornment, TextField } from "@mui/material";
+
+const field = (register, name) => {
+  const { ref, ...rest } = register(name);
+  return { ...rest, inputRef: ref };
+};
 
 const schema = yup.object({
   name: yup.string().max(30).required("Name is required"),
@@ -26,33 +32,43 @@ const schema = yup.object({
     .required("Confirm your password"),
 });
 
-const input =
-  "mt-1 w-full border border-gray-300 rounded-full px-5 py-3 text-sm focus:outline-none focus:border-[#E3000B] focus:ring-1 focus:ring-[#E3000B]";
 const label =
   "text-[11px] font-extrabold tracking-widest text-gray-800 uppercase";
-const err = "text-[#E3000B] text-xs mt-1";
 
 function PasswordField({ name, text, placeholder, register, error }) {
   const [show, setShow] = useState(false);
   return (
     <div>
       <label className={label}>{text}</label>
-      <div className="relative">
-        <input
-          type={show ? "text" : "password"}
-          {...register(name)}
-          placeholder={placeholder}
-          className={`${input} pr-16`}
-        />
-        <button
-          type="button"
-          onClick={() => setShow((s) => !s)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500 hover:text-black"
-        >
-          {show ? "Hide" : "Show"}
-        </button>
-      </div>
-      {error && <p className={err}>{error.message}</p>}
+      <TextField
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        {...field(register, name)}
+        error={!!error}
+        helperText={error?.message}
+        sx={{ mt: 0.5 }}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => setShow((s) => !s)}
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    minWidth: 0,
+                    color: "text.secondary",
+                  }}
+                >
+                  {show ? "Hide" : "Show"}
+                </Button>
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
     </div>
   );
 }
@@ -80,16 +96,25 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-body flex items-center justify-center p-4 sm:p-6">
+    <div className="relative overflow-hidden min-h-screen bg-white text-gray-900 flex items-center justify-center p-4 sm:p-6">
+      <img
+        src="/minecraft.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute -left-16 bottom-0 w-[420px] lg:w-[560px] opacity-20"
+      />
+      <img
+        src="/spiderman.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute -right-10 top-0 w-[260px] lg:w-[380px] opacity-20"
+      />
       <main className="w-full max-w-md bg-white rounded-3xl border-2 border-gray-200 shadow-md overflow-hidden">
         <section className="p-8 sm:p-10">
           <div className="flex items-center justify-between">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 border-2 border-gray-200 hover:border-black text-gray-800 text-xs font-extrabold tracking-widest uppercase rounded-full px-4 py-2 transition-colors"
-            >
+            <Button component={Link} to="/" variant="outlined" size="small">
               ← Back to home
-            </Link>
+            </Button>
             <Link
               to="/"
               className="font-fredoka text-xl font-bold uppercase tracking-tight text-black"
@@ -100,11 +125,11 @@ export default function Register() {
 
           <div className="py-8">
             <h1 className="font-fredoka text-4xl font-semibold tracking-tight text-black">
-              Create <span className="text-[#E3000B]">account</span>
+              Create <span className="text-brand-500">account</span>
             </h1>
             <div className="flex my-3 h-1.5 w-24 rounded-full overflow-hidden">
-              <div className="flex-1 bg-[#1D4ED8]" />
-              <div className="flex-1 bg-[#E3000B]" />
+              <div className="flex-1 bg-ink" />
+              <div className="flex-1 bg-brand-500" />
             </div>
             <p className="text-sm text-gray-600 font-semibold mb-6">
               We’ll email you a verification link.
@@ -113,21 +138,23 @@ export default function Register() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label className={label}>Name</label>
-                <input
-                  {...register("name")}
-                  className={input}
+                <TextField
                   placeholder="Your name"
+                  {...field(register, "name")}
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
+                  sx={{ mt: 0.5 }}
                 />
-                {errors.name && <p className={err}>{errors.name.message}</p>}
               </div>
               <div>
                 <label className={label}>Email</label>
-                <input
-                  {...register("email")}
-                  className={input}
+                <TextField
                   placeholder="you@email.com"
+                  {...field(register, "email")}
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                  sx={{ mt: 0.5 }}
                 />
-                {errors.email && <p className={err}>{errors.email.message}</p>}
               </div>
               <PasswordField
                 name="password"
@@ -144,19 +171,22 @@ export default function Register() {
                 error={errors.confirm}
               />
 
-              <button
+              <Button
+                type="submit"
+                fullWidth
+                size="large"
                 disabled={isSubmitting}
-                className="w-full bg-[#E3000B] hover:bg-red-700 text-white font-fredoka font-semibold text-lg py-3 rounded-full shadow-md transition-transform hover:scale-[1.02] disabled:opacity-60 mt-2"
+                sx={{ mt: 1 }}
               >
                 {isSubmitting ? "Creating..." : "Register"}
-              </button>
+              </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-gray-600">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-[#E3000B] font-bold hover:underline"
+                className="text-brand-500 font-bold hover:underline"
               >
                 Sign in
               </Link>

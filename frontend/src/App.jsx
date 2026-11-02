@@ -3,6 +3,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import StoreLayout from "./Components/Layout/StoreLayout";
 import AdminLayout from "./Components/Layout/AdminLayout";
+import AccountLayout from "./Components/Layout/AccountLayout";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import Landing from "./Components/Landing";
 import Login from "./Components/User/Login";
@@ -51,29 +52,23 @@ export default function App() {
             }
           />
           <Route
-            path="/profile"
             element={
               <ProtectedRoute>
-                <Profile />
+                <AccountLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute role="customer">
-                <Orders />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders/:id"
-            element={
-              <ProtectedRoute>
-                <OrderDetail />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route path="/profile" element={<Profile />} />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute role="customer">
+                  <Orders />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/orders/:id" element={<OrderDetail />} />
+          </Route>
         </Route>
 
         <Route

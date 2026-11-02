@@ -7,28 +7,31 @@ exports.getDashboard = async (req, res) => {
   try {
     const { from, to } = req.query;
     const dateFilter = {};
-    if (from) dateFilter.$gte = new Date(from);
+    if (from)
+      dateFilter.$gte = new Date(new Date(from).getTime() - 8 * 3600000);
     if (to) {
       const end = new Date(to);
-      end.setHours(23, 59, 59, 999);
+      end.setUTCHours(15, 59, 59, 999);
       dateFilter.$lte = end;
     }
 
     const deliveredQuery = { status: "delivered" };
     if (from || to) deliveredQuery.createdAt = dateFilter;
 
-    const [users, products, allOrders, delivered] = await Promise.all([
-      User.countDocuments({ isDeleted: false, role: "customer" }),
-      Product.countDocuments({ isDeleted: false }),
-      Order.find().populate("user", "name"),
-      Order.find(deliveredQuery).populate("user", "name"),
-    ]);
-
+    const [users, products, totalOrders, delivered, productsAll] =
+      await Promise.all([
+        User.countDocuments({ isDeleted: false, role: "customer" }),
+        Product.countDocuments({ isDeleted: false }),
+        Order.countDocuments(from || to ? { createdAt: dateFilter } : {}),
+        Order.find(deliveredQuery).populate("user", "name"),
+        Product.find({ isDeleted: false }).select("name categories"),
+      ]);
     const totalSales = delivered.reduce((s, o) => s + orderTotal(o), 0);
-
     const byDay = {};
     delivered.forEach((o) => {
-      const key = new Date(o.createdAt).toISOString().slice(0, 10);
+      const key = new Date(new Date(o.createdAt).getTime() + 8 * 3600000)
+        .toISOString()
+        .slice(0, 10);
       byDay[key] = (byDay[key] || 0) + orderTotal(o);
     });
     const labels = Object.keys(byDay).sort();
@@ -38,42 +41,37 @@ exports.getDashboard = async (req, res) => {
     const categoryMap = {};
     const userMap = {};
 
+    const idToCats = Object.fromEntries(
+      productsAll.map((p) => [String(p._id), p.categories]),
+    );
     delivered.forEach((o) => {
       const uname = o.user?.name || "Unknown";
       const ot = orderTotal(o);
       userMap[uname] = (userMap[uname] || 0) + ot;
       o.items.forEach((item) => {
-        productMap[item.name] =
-          (productMap[item.name] || 0) + item.unitPrice * item.quantity;
+        const amt = item.unitPrice * item.quantity;
+        productMap[item.name] = (productMap[item.name] || 0) + amt;
+        const cats = idToCats[String(item.product)];
+        (cats?.length ? cats : ["Other"]).forEach(
+          (c) => (categoryMap[c] = (categoryMap[c] || 0) + amt),
+        );
       });
     });
 
-    const productsAll = await Product.find({ isDeleted: false });
-    const nameToCat = Object.fromEntries(
-      productsAll.map((p) => [p.name, p.category]),
-    );
-    Object.entries(productMap).forEach(([name, amt]) => {
-      const cat = nameToCat[name] || "Other";
-      categoryMap[cat] = (categoryMap[cat] || 0) + amt;
-    });
-
     const toBreakdown = (map) => {
-      const entries = Object.entries(map)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-      const sum = entries.reduce((s, [, v]) => s + v, 0) || 1;
-      return entries.map(([name, amount]) => ({
+      const all = Object.entries(map).sort((a, b) => b[1] - a[1]);
+      const sum = all.reduce((s, [, v]) => s + v, 0) || 1;
+      return all.slice(0, 5).map(([name, amount]) => ({
         name,
         amount,
         percent: Math.round((amount / sum) * 1000) / 10,
       }));
     };
-
     res.json({
       success: true,
       stats: {
         totalSales,
-        totalOrders: allOrders.length,
+        totalOrders,
         totalUsers: users,
         totalProducts: products,
       },
@@ -104,11 +102,17 @@ exports.updateUser = async (req, res) => {
       return res
         .status(400)
         .json({ message: "You can't change your own account here" });
-    const user = await User.findById(req.params.id);
+
+    const user = await User.findOne({ _id: req.params.id, isDeleted: false });
     if (!user) return res.status(404).json({ message: "User not found" });
+
     const { name, role, isActive } = req.body;
     if (name) user.name = name;
-    if (role) user.role = role;
+    if (role) {
+      if (!["customer", "admin"].includes(role))
+        return res.status(400).json({ message: "Invalid role" });
+      user.role = role;
+    }
     if (typeof isActive === "boolean") user.isActive = isActive;
     await user.save();
     res.json({ success: true, user });
@@ -123,7 +127,8 @@ exports.deleteUser = async (req, res) => {
       return res
         .status(400)
         .json({ message: "You can't change your own account here" });
-    const user = await User.findById(req.params.id);
+
+    const user = await User.findOne({ _id: req.params.id, isDeleted: false });
     if (!user) return res.status(404).json({ message: "User not found" });
     user.isDeleted = true;
     await user.save();

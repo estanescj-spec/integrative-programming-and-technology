@@ -6,7 +6,7 @@ const reviewSchema = new mongoose.Schema(
     product: { type: mongoose.Schema.ObjectId, ref: "Product", required: true },
     order: { type: mongoose.Schema.ObjectId, ref: "Order", required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
-    comment: { type: String, required: true },
+    comment: { type: String, default: "" },
   },
   { timestamps: true },
 );

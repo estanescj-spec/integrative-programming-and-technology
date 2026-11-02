@@ -1,15 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {
-  registerUser,
-  verifyEmail,
-  loginUser,
-  logout,
-  getProfile,
-  googleLogin,
-  updateProfile,
-  resendVerification,
-} = require("../controllers/auth");
+const { registerUser, verifyEmail, loginUser, logout, getProfile, googleLogin, updateProfile, resendVerification, } = require("../controllers/auth");
 const { isAuthenticatedUser } = require("../middlewares/auth");
 const { registerRules, profileRules } = require("../middlewares/validate");
 
