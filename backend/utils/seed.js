@@ -357,7 +357,6 @@ async function resetAll() {
 }
 
 module.exports = async function seedProducts() {
-  await resetAll(); 
   await seedCategories();
 
   if ((await Product.countDocuments({ isDeleted: false })) === 0) {

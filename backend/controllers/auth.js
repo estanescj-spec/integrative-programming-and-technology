@@ -8,7 +8,11 @@ const { getAuth } = require("firebase-admin/auth");
 const firebaseAuth = () => {
   if (!getApps().length) {
     initializeApp({
-      credential: cert(require("../config/serviceAccountKey.json")),
+      credential: cert(
+        process.env.FIREBASE_SERVICE_ACCOUNT
+          ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+          : require("../config/serviceAccountKey.json"),
+      ),
     });
   }
   return getAuth();
