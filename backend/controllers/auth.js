@@ -57,6 +57,15 @@ exports.registerUser = async (req, res) => {
     await user.save();
 
     const url = `${process.env.CLIENT_URL}/api/v1/verify/${token}`;
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Toy Haven - Verify your email",
+        message: `<p>Hi ${user.name}, click to verify your account:</p><a href="${url}">${url}</a>`,
+      });
+    } catch (e) {
+      console.log("Email not sent:", e.message);
+    }
     res.status(201).json({
       success: true,
       message: "Registered. Check your email to verify.",
